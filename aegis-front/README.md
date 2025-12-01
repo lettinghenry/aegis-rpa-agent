@@ -10,6 +10,7 @@ AEGIS RPA Frontend is a Material 3-designed Flutter application that allows user
 
 - **🎯 Simple Task Input**: Submit automation tasks using natural language
 - **📊 Real-Time Progress**: Live WebSocket updates showing execution progress
+- **🪟 Smart Window Management**: Automatic minimal mode during RPA execution for unobstructed desktop access
 - **📜 Execution History**: Review past automation sessions with detailed results
 - **🎨 Material 3 Design**: Modern, beautiful UI following Material Design 3 guidelines
 - **🌓 Dark Mode Support**: Automatic light/dark theme based on system preferences
@@ -307,6 +308,8 @@ git push origin feature/your-feature-name
    - Example: "Check my Outlook inbox and download any PDFs"
 2. **Submit**: Tap the submit button
 3. **Monitor Progress**: Watch real-time execution progress with subtask updates
+4. **Minimal Mode**: The window automatically minimizes to a small floating panel during RPA execution, giving the automation agent full desktop access
+5. **Completion**: The window automatically restores to normal size when execution completes
 
 ### Viewing History
 

@@ -32,6 +32,7 @@ dev_dependencies:
   
   # Property-based testing
   test: ^1.24.9
+  checks: ^0.3.0
   
   # Mocking
   mockito: ^5.4.4

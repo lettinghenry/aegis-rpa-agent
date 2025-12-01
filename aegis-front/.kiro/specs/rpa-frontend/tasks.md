@@ -38,7 +38,13 @@
   - Test model validation
   - _Requirements: 12.1, 12.2_
 
-- [ ]* 2.2 Write property test for model serialization
+- [x] 2.2 Write property test for model serialization
+
+
+
+
+
+
   - **Property 46: Request Serialization**
   - **Property 47: Response Deserialization**
   - **Validates: Requirements 12.1, 12.2**
