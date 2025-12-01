@@ -227,6 +227,9 @@ async def get_session_details(session_id: str):
         
         return session
         
+    except (SessionNotFoundError, InvalidSessionStateError):
+        # Let custom exceptions propagate to exception handlers
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -322,6 +325,9 @@ async def cancel_execution(session_id: str):
             "status": "cancelled"
         }
         
+    except (SessionNotFoundError, InvalidSessionStateError):
+        # Let custom exceptions propagate to exception handlers
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -686,6 +692,22 @@ async def validation_error_handler(request: Request, exc: ValidationError):
     )
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=exc.to_dict()
+    )
+
+
+@app.exception_handler(SessionNotFoundError)
+async def session_not_found_handler(request: Request, exc: SessionNotFoundError):
+    """
+    Handle session not found errors (HTTP 404).
+    """
+    logger.warning(
+        f"Session not found: {exc.message}",
+        session_id=exc.session_id,
+        extra_data=exc.context
+    )
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
         content=exc.to_dict()
     )
 

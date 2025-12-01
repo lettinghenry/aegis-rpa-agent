@@ -39,11 +39,13 @@ class TestADKAgentManager:
     
     def test_initialization_from_env_vars(self):
         """Test initialization from environment variables."""
-        with patch.dict('os.environ', {
-            'GOOGLE_ADK_API_KEY': 'env_key',
-            'GEMINI_MODEL': 'gemini-1.5-flash',
-            'ADK_TIMEOUT': '45'
-        }):
+        with patch('src.adk_agent.get_config') as mock_get_config:
+            mock_config = Mock()
+            mock_config.GOOGLE_ADK_API_KEY = 'env_key'
+            mock_config.GEMINI_MODEL = 'gemini-1.5-flash'
+            mock_config.ADK_TIMEOUT = 45
+            mock_get_config.return_value = mock_config
+            
             manager = ADKAgentManager()
             assert manager.api_key == "env_key"
             assert manager.model_name == "gemini-1.5-flash"

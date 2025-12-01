@@ -59,7 +59,8 @@ class ADKAgentManager:
         self.active_application = None  # Track currently active application
         self.application_context = {}  # Store application-specific context
         
-        if not self.api_key:
+        # Validate API key is provided and not a placeholder
+        if not self.api_key or self.api_key in ["", "your_google_api_key_here"]:
             raise ValueError(
                 "Google API key not provided. Set GOOGLE_ADK_API_KEY environment variable "
                 "or pass api_key parameter."

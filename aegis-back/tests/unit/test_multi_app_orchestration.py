@@ -192,61 +192,56 @@ class TestADKAgentMultiApp:
     
     def test_agent_has_application_context(self):
         """Test that ADK Agent has application context tracking."""
-        with patch.dict('os.environ', {'GOOGLE_ADK_API_KEY': 'test-key'}):
-            agent = ADKAgentManager()
-            
-            assert hasattr(agent, 'active_application')
-            assert hasattr(agent, 'application_context')
-            assert agent.active_application is None
-            assert agent.application_context == {}
+        agent = ADKAgentManager(api_key='test-key')
+        
+        assert hasattr(agent, 'active_application')
+        assert hasattr(agent, 'application_context')
+        assert agent.active_application is None
+        assert agent.application_context == {}
     
     def test_identify_applications_single_app(self):
         """Test application identification with single app."""
-        with patch.dict('os.environ', {'GOOGLE_ADK_API_KEY': 'test-key'}):
-            agent = ADKAgentManager()
-            
-            instruction = "Open notepad and type hello"
-            apps = agent._identify_applications(instruction)
-            
-            assert "notepad" in apps
+        agent = ADKAgentManager(api_key='test-key')
+        
+        instruction = "Open notepad and type hello"
+        apps = agent._identify_applications(instruction)
+        
+        assert "notepad" in apps
     
     def test_identify_applications_multiple_apps(self):
         """Test application identification with multiple apps."""
-        with patch.dict('os.environ', {'GOOGLE_ADK_API_KEY': 'test-key'}):
-            agent = ADKAgentManager()
-            
-            instruction = "Copy data from Excel and paste into Word"
-            apps = agent._identify_applications(instruction)
-            
-            assert "excel" in apps
-            assert "word" in apps
-            assert len(apps) == 2
+        agent = ADKAgentManager(api_key='test-key')
+        
+        instruction = "Copy data from Excel and paste into Word"
+        apps = agent._identify_applications(instruction)
+        
+        assert "excel" in apps
+        assert "word" in apps
+        assert len(apps) == 2
     
     def test_update_active_application(self):
         """Test updating active application context."""
-        with patch.dict('os.environ', {'GOOGLE_ADK_API_KEY': 'test-key'}):
-            agent = ADKAgentManager()
-            
-            agent._update_active_application("notepad")
-            
-            assert agent.active_application == "notepad"
-            assert "notepad" in agent.application_context
-            assert agent.application_context["notepad"]["action_count"] == 1
-            
-            # Update again
-            agent._update_active_application("notepad")
-            assert agent.application_context["notepad"]["action_count"] == 2
+        agent = ADKAgentManager(api_key='test-key')
+        
+        agent._update_active_application("notepad")
+        
+        assert agent.active_application == "notepad"
+        assert "notepad" in agent.application_context
+        assert agent.application_context["notepad"]["action_count"] == 1
+        
+        # Update again
+        agent._update_active_application("notepad")
+        assert agent.application_context["notepad"]["action_count"] == 2
     
     def test_should_focus_application(self):
         """Test determining if application focus is needed."""
-        with patch.dict('os.environ', {'GOOGLE_ADK_API_KEY': 'test-key'}):
-            agent = ADKAgentManager()
-            agent.active_application = "notepad"
-            
-            # Tools that require focus
-            assert agent._should_focus_application("click_element", {}) == "notepad"
-            assert agent._should_focus_application("type_text", {}) == "notepad"
-            
-            # Tools that don't require focus
-            assert agent._should_focus_application("launch_application", {}) is None
-            assert agent._should_focus_application("capture_screen", {}) is None
+        agent = ADKAgentManager(api_key='test-key')
+        agent.active_application = "notepad"
+        
+        # Tools that require focus
+        assert agent._should_focus_application("click_element", {}) == "notepad"
+        assert agent._should_focus_application("type_text", {}) == "notepad"
+        
+        # Tools that don't require focus
+        assert agent._should_focus_application("launch_application", {}) is None
+        assert agent._should_focus_application("capture_screen", {}) is None
