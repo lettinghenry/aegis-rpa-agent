@@ -30,7 +30,12 @@
   - Test edge cases (empty fields, invalid types)
   - _Requirements: 7.1, 7.3_
 
-- [ ] 3. Implement Pre-Processing Layer
+- [x] 3. Implement Pre-Processing Layer
+
+
+
+
+
   - Create preprocessing.py with PreProcessor class
   - Implement validate_instruction() method
   - Implement sanitize_instruction() method
