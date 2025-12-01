@@ -327,11 +327,37 @@ For issues and questions:
 - Contact the development team
 - Check the documentation in `.kiro/specs/`
 
-## Roadmap
+## Current Status
 
-- [ ] Multi-session support (concurrent executions)
-- [ ] Advanced semantic caching with embeddings
-- [ ] Visual debugging with screenshot capture
-- [ ] Browser automation integration (Selenium/Playwright)
-- [ ] Mobile device automation support
-- [ ] Voice command input
+### Completed Features ✅
+
+- Core project structure and dependencies
+- Pydantic data models with window state support
+- Pre-processing validation layer
+- Plan cache with similarity-based lookup
+- RPA toolbox (8 tools: click, type, press_key, launch_app, focus_window, capture_screen, find_element, scroll)
+- RPA engine with retry logic
+- Action observer for verification
+- ADK agent manager with Gemini integration
+- Session manager for lifecycle tracking
+- History store with JSON persistence
+- WebSocket manager with window state commands
+- FastAPI endpoints (REST + WebSocket)
+- Main execution flow integration
+- Strategy selection module
+
+### In Progress 🚧
+
+- Unit tests for all components
+- Property-based tests (Hypothesis)
+- Integration tests for end-to-end flows
+- Configuration and environment setup
+
+### Planned Features 📋
+
+- Multi-app orchestration enhancements
+- Intelligent text input handling
+- Advanced error handling and logging
+- Browser automation integration (Selenium/Playwright)
+- Mobile device automation support
+- Voice command input
