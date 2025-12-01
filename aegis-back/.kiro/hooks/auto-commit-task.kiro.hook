@@ -8,7 +8,7 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": ""
+    "prompt": " I want you to use this content from the task to create a commit, stage using 'git add .' and commit"
   },
   "workspaceFolderName": "aegis-back",
   "shortName": "auto-commit-task"
