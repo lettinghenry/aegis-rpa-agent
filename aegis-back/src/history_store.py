@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 from src.models import ExecutionSession, SessionSummary
+from src.config import get_config
 
 
 class HistoryStore:
@@ -22,14 +23,19 @@ class HistoryStore:
     with an index file for quick lookups and ordering.
     """
     
-    def __init__(self, history_dir: str = "./data/history"):
+    def __init__(self, history_dir: Optional[Path] = None):
         """
         Initialize the HistoryStore.
         
         Args:
-            history_dir: Directory path for storing session files
+            history_dir: Directory path for storing session files (defaults to config.HISTORY_DIR)
         """
-        self.history_dir = Path(history_dir)
+        config = get_config()
+        if history_dir is None:
+            self.history_dir = config.HISTORY_DIR
+        else:
+            # Convert to Path if string is provided (for backward compatibility)
+            self.history_dir = Path(history_dir) if isinstance(history_dir, str) else history_dir
         self.index_file = self.history_dir / "index.json"
         
         # Ensure directory exists

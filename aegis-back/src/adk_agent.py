@@ -18,6 +18,7 @@ import google.generativeai as genai
 
 from src.models import StatusUpdate, Subtask, SubtaskStatus, ToolResult
 from src.rpa_tools import TOOLS
+from src.config import get_config
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -44,13 +45,14 @@ class ADKAgentManager:
         Initialize the ADK Agent Manager.
         
         Args:
-            api_key: Google API key (defaults to GOOGLE_ADK_API_KEY env var)
-            model_name: Gemini model name (defaults to GEMINI_MODEL env var or gemini-1.5-pro)
-            timeout: Request timeout in seconds (defaults to ADK_TIMEOUT env var or 30)
+            api_key: Google API key (defaults to config.GOOGLE_ADK_API_KEY)
+            model_name: Gemini model name (defaults to config.GEMINI_MODEL)
+            timeout: Request timeout in seconds (defaults to config.ADK_TIMEOUT)
         """
-        self.api_key = api_key or os.getenv("GOOGLE_ADK_API_KEY")
-        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-pro")
-        self.timeout = timeout or int(os.getenv("ADK_TIMEOUT", "30"))
+        config = get_config()
+        self.api_key = api_key or config.GOOGLE_ADK_API_KEY
+        self.model_name = model_name or config.GEMINI_MODEL
+        self.timeout = timeout or config.ADK_TIMEOUT
         self.model = None
         self.tools = []
         self.tool_map = {}

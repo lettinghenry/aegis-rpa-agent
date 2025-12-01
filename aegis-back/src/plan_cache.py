@@ -14,6 +14,7 @@ from pathlib import Path
 from collections import OrderedDict
 
 from src.models import ExecutionPlan
+from src.config import get_config
 
 
 class PlanCache:
@@ -26,8 +27,8 @@ class PlanCache:
     
     def __init__(
         self,
-        cache_dir: str = "./data/cache",
-        max_size: int = 100,
+        cache_dir: Optional[Path] = None,
+        max_size: Optional[int] = None,
         ttl_hours: int = 24,
         similarity_threshold: float = 0.95
     ):
@@ -35,13 +36,18 @@ class PlanCache:
         Initialize the Plan Cache.
         
         Args:
-            cache_dir: Directory for cache storage
-            max_size: Maximum number of cached plans
+            cache_dir: Directory for cache storage (defaults to config.CACHE_DIR)
+            max_size: Maximum number of cached plans (defaults to config.MAX_CACHE_SIZE)
             ttl_hours: Time-to-live for cached plans in hours
             similarity_threshold: Minimum similarity score for cache hit
         """
-        self.cache_dir = Path(cache_dir)
-        self.max_size = max_size
+        config = get_config()
+        if cache_dir is None:
+            self.cache_dir = config.CACHE_DIR
+        else:
+            # Convert to Path if string is provided (for backward compatibility)
+            self.cache_dir = Path(cache_dir) if isinstance(cache_dir, str) else cache_dir
+        self.max_size = max_size or config.MAX_CACHE_SIZE
         self.ttl = timedelta(hours=ttl_hours)
         self.similarity_threshold = similarity_threshold
         

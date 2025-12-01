@@ -44,12 +44,16 @@ from src.exceptions import (
 )
 from src.logging_utils import setup_logging, get_session_logger, set_session_context, clear_session_context
 from src.resource_manager import ResourceManager
+from src.config import get_config
+
+# Load configuration
+config = get_config()
 
 # Configure logging with session context support
 setup_logging(
-    log_level=os.getenv("LOG_LEVEL", "INFO"),
-    use_json=os.getenv("USE_JSON_LOGS", "false").lower() == "true",
-    log_file=os.getenv("LOG_FILE", None)
+    log_level=config.LOG_LEVEL,
+    use_json=config.USE_JSON_LOGS,
+    log_file=config.LOG_FILE
 )
 logger = get_session_logger(__name__)
 
@@ -605,6 +609,10 @@ async def startup_event():
     logger.info("🚀 AEGIS RPA Backend starting up...")
     
     try:
+        # Log configuration summary
+        config_summary = config.get_summary()
+        logger.info(f"Configuration loaded: {config_summary}")
+        
         # Initialize services
         preprocessor = PreProcessor()
         logger.info("✓ PreProcessor initialized")
@@ -753,8 +761,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=config.HOST,
+        port=config.PORT,
         reload=True,
-        log_level="info"
+        log_level=config.LOG_LEVEL.lower()
     )
