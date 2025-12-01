@@ -318,7 +318,7 @@ uvicorn main:app --log-config logging.conf > app.log 2>&1
 
 ## License
 
-[Your License Here]
+[License](aegis-back/LICENSE)
 
 ## Support
 
