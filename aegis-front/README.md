@@ -461,7 +461,7 @@ Test with screen readers:
 
 ## License
 
-[Your License Here]
+[License](aegis-back/LICENSE)
 
 ## Support
 
