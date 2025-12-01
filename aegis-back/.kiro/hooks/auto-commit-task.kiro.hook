@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Auto Commit After Task",
+  "description": "Automatically stages all changes using 'git add .' and creates a commit with the content from the last completed task",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": ""
+  },
+  "workspaceFolderName": "aegis-back",
+  "shortName": "auto-commit-task"
+}
