@@ -12,7 +12,12 @@
   - Create directory structure: lib/models/, lib/services/, lib/screens/, lib/state/, lib/widgets/
   - _Requirements: 9.1, 13.1_
 
-- [ ] 2. Implement data models
+- [x] 2. Implement data models
+
+
+
+
+
   - Create lib/models/task_instruction.dart with request/response models
   - Create lib/models/subtask.dart with Subtask and SubtaskStatus enum
   - Create lib/models/execution_session.dart with ExecutionSession and SessionStatus enum
@@ -21,7 +26,13 @@
   - Add fromJson() and toJson() methods to all models
   - _Requirements: 12.1, 12.2, 13.1_
 
-- [ ]* 2.1 Write unit tests for data models
+- [x] 2.1 Write unit tests for data models
+
+
+
+
+
+
   - Test JSON serialization and deserialization
   - Test enum conversions
   - Test model validation
