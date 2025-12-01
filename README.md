@@ -255,7 +255,7 @@ Detailed specifications are available in each project's `.kiro/specs/` directory
 
 ## License
 
-[Your License Here]
+[License](aegis-back/LICENSE)
 
 ## Support
 
