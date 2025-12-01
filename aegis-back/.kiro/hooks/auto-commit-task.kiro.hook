@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "name": "Auto Commit After Task",
-  "description": "Automatically stages all changes using 'git add .' and creates a commit with the content from the last completed task",
+  "name": "Commit After Task",
+  "description": "stages all changes using 'git add .' and creates a commit with the content from the last completed task",
   "version": "1",
   "when": {
     "type": "userTriggered"

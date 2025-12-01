@@ -4,10 +4,12 @@
   "description": "Automatically stages all files using 'git add .' when an agent task completes successfully",
   "version": "1",
   "when": {
-    "type": "agentEnd"
+    "type": "userTriggered"
   },
   "then": {
-    "type": "runCommand",
-    "command": "git add ."
-  }
+    "type": "askAgent",
+    "prompt": ""
+  },
+  "workspaceFolderName": "aegis-front",
+  "shortName": "auto-stage-on-agent-end"
 }
