@@ -16,7 +16,8 @@ from threading import Lock
 from src.models import (
     ExecutionSession,
     Subtask,
-    SubtaskStatus
+    SubtaskStatus,
+    StatusUpdate
 )
 
 
@@ -97,14 +98,15 @@ class SessionManager:
     def update_session(
         self,
         session_id: str,
-        update: SessionUpdate
+        update: Optional[SessionUpdate | StatusUpdate]
     ) -> bool:
         """
         Update a session with new status, subtask, or completion time.
         
         Args:
             session_id: The unique session identifier
-            update: SessionUpdate containing the changes to apply
+            update: SessionUpdate or StatusUpdate containing the changes to apply,
+                   or None to just update the timestamp
             
         Returns:
             bool: True if update succeeded, False if session not found
@@ -117,29 +119,58 @@ class SessionManager:
             if not session:
                 return False
             
-            # Update status if provided
-            if update.status:
-                session.status = update.status
+            # Handle None update (just update timestamp)
+            if update is None:
+                session.updated_at = datetime.now(timezone.utc)
+                return True
             
-            # Add or update subtask if provided
-            if update.subtask:
-                # Check if subtask already exists (update case)
-                existing_index = None
-                for i, st in enumerate(session.subtasks):
-                    if st.id == update.subtask.id:
-                        existing_index = i
-                        break
+            # Handle StatusUpdate from models.py (from ADK agent)
+            if isinstance(update, StatusUpdate):
+                # Update status from overall_status
+                if update.overall_status:
+                    session.status = update.overall_status
                 
-                if existing_index is not None:
-                    # Update existing subtask
-                    session.subtasks[existing_index] = update.subtask
-                else:
-                    # Add new subtask
-                    session.subtasks.append(update.subtask)
+                # Add or update subtask if provided
+                if update.subtask:
+                    # Check if subtask already exists (update case)
+                    existing_index = None
+                    for i, st in enumerate(session.subtasks):
+                        if st.id == update.subtask.id:
+                            existing_index = i
+                            break
+                    
+                    if existing_index is not None:
+                        # Update existing subtask
+                        session.subtasks[existing_index] = update.subtask
+                    else:
+                        # Add new subtask
+                        session.subtasks.append(update.subtask)
             
-            # Update completion time if provided
-            if update.completed_at:
-                session.completed_at = update.completed_at
+            # Handle SessionUpdate from session_manager.py
+            else:
+                # Update status if provided
+                if update.status:
+                    session.status = update.status
+                
+                # Add or update subtask if provided
+                if update.subtask:
+                    # Check if subtask already exists (update case)
+                    existing_index = None
+                    for i, st in enumerate(session.subtasks):
+                        if st.id == update.subtask.id:
+                            existing_index = i
+                            break
+                    
+                    if existing_index is not None:
+                        # Update existing subtask
+                        session.subtasks[existing_index] = update.subtask
+                    else:
+                        # Add new subtask
+                        session.subtasks.append(update.subtask)
+                
+                # Update completion time if provided
+                if update.completed_at:
+                    session.completed_at = update.completed_at
             
             # Always update the updated_at timestamp
             session.updated_at = datetime.now(timezone.utc)

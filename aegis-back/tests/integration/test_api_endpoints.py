@@ -71,6 +71,7 @@ def mock_services():
         
         # Make websocket_manager methods async
         mock_websocket_manager.send_window_state = AsyncMock()
+        mock_websocket_manager.broadcast_update = AsyncMock()
         
         yield {
             'preprocessor': mock_preprocessor,
@@ -174,6 +175,7 @@ def test_cancel_execution_success(client, mock_services):
 def test_cancel_execution_not_found(client, mock_services):
     """Test cancelling a non-existent session."""
     mock_services['session_manager'].get_session.return_value = None
+    mock_services['history_store'].get_session_details.return_value = None
     
     response = client.delete("/api/execution/non-existent-session")
     

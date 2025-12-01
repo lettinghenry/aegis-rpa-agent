@@ -25,7 +25,8 @@ from src.models import (
     HistoryResponse,
     ErrorResponse,
     ExecutionSession,
-    SessionSummary
+    SessionSummary,
+    StatusUpdate
 )
 from src.preprocessing import PreProcessor
 from src.plan_cache import PlanCache
@@ -224,6 +225,9 @@ async def cancel_execution(session_id: str):
     """
     Cancel an ongoing execution session.
     
+    This endpoint cancels an active execution, cleans up resources,
+    and restores the frontend window to normal state.
+    
     Args:
         session_id: Unique session identifier
     
@@ -235,7 +239,7 @@ async def cancel_execution(session_id: str):
         HTTPException 400: If session already completed/cancelled
         HTTPException 500: If cancellation fails
     
-    Validates: Requirement 7.4
+    Validates: Requirements 7.4, 8.5, 13.4
     """
     try:
         logger.info(f"Cancelling execution for session: {session_id}")
@@ -244,6 +248,13 @@ async def cancel_execution(session_id: str):
         session = session_manager.get_session(session_id)
         
         if not session:
+            # Check history store for completed sessions
+            session = history_store.get_session_details(session_id)
+            if session:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Session {session_id} already completed and cannot be cancelled"
+                )
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Session {session_id} not found"
@@ -256,7 +267,7 @@ async def cancel_execution(session_id: str):
                 detail=f"Cannot cancel session with status: {session.status}"
             )
         
-        # Cancel the session
+        # Cancel the session (this will be picked up by the queue processor)
         success = session_manager.cancel_session(session_id)
         
         if not success:
@@ -265,18 +276,38 @@ async def cancel_execution(session_id: str):
                 detail="Failed to cancel session"
             )
         
-        # Send window restore command via WebSocket
-        await websocket_manager.send_window_state(session_id, "normal")
+        # Send cancellation status update with window restore
+        cancel_update = StatusUpdate(
+            session_id=session_id,
+            subtask=None,
+            overall_status="cancelled",
+            message="Execution cancelled by user",
+            window_state="normal",
+            timestamp=datetime.now()
+        )
+        await websocket_manager.broadcast_update(session_id, cancel_update)
+        
+        # Update session in manager
+        session.status = "cancelled"
+        session.completed_at = datetime.now()
+        session.updated_at = datetime.now()
+        session_manager.update_session(session_id, None)
+        
+        # Save to history
+        history_store.save_session(session)
+        
+        logger.info(f"Session {session_id} cancelled successfully")
         
         return {
             "message": f"Session {session_id} cancelled successfully",
-            "session_id": session_id
+            "session_id": session_id,
+            "status": "cancelled"
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error cancelling execution: {e}")
+        logger.error(f"Error cancelling execution: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cancel execution: {str(e)}"
@@ -324,6 +355,11 @@ async def process_execution_queue():
     
     This ensures that only one task executes at a time, preventing
     conflicts in desktop automation.
+    
+    Integrates: Pre-Processing → Plan Cache → ADK Agent → RPA Engine → Action Observer
+    Connects: Session Manager ↔ WebSocket Manager ↔ History Store
+    
+    Validates: Requirements 2.1, 2.3, 1.3, 6.5, 8.4, 13.1, 13.3, 13.4, 13.5
     """
     logger.info("Starting execution queue processor")
     
@@ -333,53 +369,172 @@ async def process_execution_queue():
             session_id = await request_queue.get()
             logger.info(f"Processing session from queue: {session_id}")
             
-            # Get session
+            # Get session from session manager
             session = session_manager.get_session(session_id)
             if not session:
                 logger.error(f"Session {session_id} not found in queue processor")
+                request_queue.task_done()
                 continue
             
-            # Check plan cache
-            cached_plan = plan_cache.get_cached_plan(session.instruction)
+            # Update session status to in_progress
+            session.status = "in_progress"
+            session.updated_at = datetime.now()
+            session_manager.update_session(session_id, None)
             
-            if cached_plan:
-                logger.info(f"Using cached plan for session {session_id}")
-                # TODO: Execute cached plan
-                # For now, proceed with ADK agent
+            # Send initial status update via WebSocket
+            initial_update = StatusUpdate(
+                session_id=session_id,
+                subtask=None,
+                overall_status="in_progress",
+                message="Starting task execution",
+                timestamp=datetime.now()
+            )
+            await websocket_manager.broadcast_update(session_id, initial_update)
             
-            # Execute instruction using ADK agent
             try:
+                # Step 1: Pre-processing already done in start_task endpoint
+                # Step 2: Check plan cache for similar instructions
+                cached_plan = plan_cache.get_cached_plan(session.instruction)
+                
+                if cached_plan:
+                    logger.info(f"Cache hit for session {session_id} - using cached plan")
+                    # Note: For now, we still use ADK agent even with cache hit
+                    # In future, could execute cached plan directly
+                    # This validates Requirement 2.3 (cache lookup performed)
+                else:
+                    logger.info(f"Cache miss for session {session_id} - generating new plan")
+                
+                # Step 3: Execute instruction using ADK Agent
+                # The ADK agent will orchestrate RPA Engine and Action Observer
+                window_state_sent = False
+                
                 async for status_update in adk_agent.execute_instruction(
                     session.instruction,
                     session_id
                 ):
-                    # Update session with status
+                    # Update session with status from ADK agent
                     session_manager.update_session(session_id, status_update)
                     
-                    # Broadcast update via WebSocket
+                    # Handle window state management
+                    # Send WINDOW_STATE_MINIMAL before first desktop action
+                    if not window_state_sent and status_update.window_state == "minimal":
+                        logger.info(f"Sending WINDOW_STATE_MINIMAL for session {session_id}")
+                        window_state_sent = True
+                    
+                    # Broadcast update via WebSocket to frontend
                     await websocket_manager.broadcast_update(session_id, status_update)
                     
                     # Check if execution completed or failed
                     if status_update.overall_status in ["completed", "failed"]:
-                        # Save to history
-                        updated_session = session_manager.get_session(session_id)
-                        if updated_session:
-                            history_store.save_session(updated_session)
+                        # Get final session state
+                        final_session = session_manager.get_session(session_id)
+                        if final_session:
+                            # Update completion timestamp
+                            final_session.completed_at = datetime.now()
+                            final_session.updated_at = datetime.now()
+                            
+                            # Save to history store for persistence
+                            history_store.save_session(final_session)
+                            logger.info(f"Session {session_id} saved to history with status: {status_update.overall_status}")
+                        
+                        # Ensure window is restored to normal
+                        if status_update.window_state != "normal":
+                            restore_update = StatusUpdate(
+                                session_id=session_id,
+                                subtask=None,
+                                overall_status=status_update.overall_status,
+                                message="Restoring window to normal state",
+                                window_state="normal",
+                                timestamp=datetime.now()
+                            )
+                            await websocket_manager.broadcast_update(session_id, restore_update)
+                            logger.info(f"Sent WINDOW_STATE_NORMAL for session {session_id}")
+                        
                         break
                 
+                # Store execution plan in cache for future reuse
+                if not cached_plan:
+                    # Get the executed plan from session
+                    final_session = session_manager.get_session(session_id)
+                    if final_session and final_session.subtasks:
+                        from src.models import ExecutionPlan
+                        plan = ExecutionPlan(
+                            instruction=session.instruction,
+                            subtasks=[
+                                {
+                                    "tool_name": st.tool_name,
+                                    "tool_args": st.tool_args,
+                                    "description": st.description
+                                }
+                                for st in final_session.subtasks
+                            ],
+                            created_at=datetime.now()
+                        )
+                        plan_cache.store_plan(session.instruction, plan)
+                        logger.info(f"Stored execution plan in cache for session {session_id}")
+                
+            except asyncio.CancelledError:
+                # Handle cancellation
+                logger.info(f"Session {session_id} execution cancelled")
+                session = session_manager.get_session(session_id)
+                if session:
+                    session.status = "cancelled"
+                    session.completed_at = datetime.now()
+                    session.updated_at = datetime.now()
+                    session_manager.update_session(session_id, None)
+                    
+                    # Save cancelled session to history
+                    history_store.save_session(session)
+                    
+                    # Send cancellation update with window restore
+                    cancel_update = StatusUpdate(
+                        session_id=session_id,
+                        subtask=None,
+                        overall_status="cancelled",
+                        message="Execution cancelled by user",
+                        window_state="normal",
+                        timestamp=datetime.now()
+                    )
+                    await websocket_manager.broadcast_update(session_id, cancel_update)
+                    logger.info(f"Sent WINDOW_STATE_NORMAL after cancellation for session {session_id}")
+                
+                raise
+                
             except Exception as e:
-                logger.error(f"Error executing session {session_id}: {e}")
+                logger.error(f"Error executing session {session_id}: {e}", exc_info=True)
+                
                 # Mark session as failed
-                session.status = "failed"
-                session.completed_at = datetime.now()
-                session_manager.update_session(session_id, None)
-                history_store.save_session(session)
+                session = session_manager.get_session(session_id)
+                if session:
+                    session.status = "failed"
+                    session.completed_at = datetime.now()
+                    session.updated_at = datetime.now()
+                    session_manager.update_session(session_id, None)
+                    
+                    # Save failed session to history
+                    history_store.save_session(session)
+                    
+                    # Send failure update with window restore
+                    failure_update = StatusUpdate(
+                        session_id=session_id,
+                        subtask=None,
+                        overall_status="failed",
+                        message=f"Execution failed: {str(e)}",
+                        window_state="normal",
+                        timestamp=datetime.now()
+                    )
+                    await websocket_manager.broadcast_update(session_id, failure_update)
+                    logger.info(f"Sent WINDOW_STATE_NORMAL after failure for session {session_id}")
             
             # Mark task as done in queue
             request_queue.task_done()
+            logger.info(f"Completed processing session {session_id}")
             
+        except asyncio.CancelledError:
+            logger.info("Execution queue processor cancelled")
+            break
         except Exception as e:
-            logger.error(f"Error in execution queue processor: {e}")
+            logger.error(f"Error in execution queue processor: {e}", exc_info=True)
             await asyncio.sleep(1)  # Prevent tight loop on errors
 
 
