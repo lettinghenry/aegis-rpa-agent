@@ -1,0 +1,15 @@
+{
+  "folders": [
+    { "path": "aegis-front" },
+    { "path": "aegis-back" }
+  ],
+  "settings": {
+    "explorer.compactFolders": false
+  },
+  "extensions": {
+    "recommendations": [
+      "dart-code.flutter", 
+      "ms-python.python"
+    ]
+  }
+}
