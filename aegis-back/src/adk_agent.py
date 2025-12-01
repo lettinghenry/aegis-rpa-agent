@@ -30,6 +30,8 @@ class ADKAgentManager:
     This class initializes the Gemini model, registers RPA tools as function declarations,
     and orchestrates the execution of natural language instructions by delegating to
     the AI agent for planning and tool invocation.
+    
+    Includes multi-app orchestration support with application identification and context tracking.
     """
     
     def __init__(
@@ -52,6 +54,8 @@ class ADKAgentManager:
         self.model = None
         self.tools = []
         self.tool_map = {}
+        self.active_application = None  # Track currently active application
+        self.application_context = {}  # Store application-specific context
         
         if not self.api_key:
             raise ValueError(
@@ -129,8 +133,36 @@ class ADKAgentManager:
         logger.info(f"Executing instruction for session {session_id}: {instruction}")
         
         try:
+            # Identify applications mentioned in the instruction
+            identified_apps = self._identify_applications(instruction)
+            
             # Create system prompt for RPA context with tool descriptions
             tool_descriptions = self._generate_tool_descriptions()
+            
+            # Add multi-app orchestration guidance if multiple apps detected
+            multi_app_guidance = ""
+            if len(identified_apps) > 1:
+                multi_app_guidance = f"""
+
+IMPORTANT - Multi-Application Task Detected:
+This task involves multiple applications: {', '.join(identified_apps)}
+
+When switching between applications:
+1. Use list_open_windows to check which applications are running
+2. Use launch_application if an application is not running
+3. Use focus_window to bring the target application to foreground before actions
+4. Use copy_to_clipboard and paste_from_clipboard for data transfer between apps
+5. Track which application is currently active
+
+Example multi-app workflow:
+{{"tool": "list_open_windows", "args": {{}}}}
+{{"tool": "launch_application", "args": {{"app_name": "notepad", "wait_time": 5}}}}
+{{"tool": "focus_window", "args": {{"window_title": "notepad"}}}}
+{{"tool": "type_text", "args": {{"text": "Hello", "interval": 0.05}}}}
+{{"tool": "copy_to_clipboard", "args": {{"text": "Hello"}}}}
+{{"tool": "focus_window", "args": {{"window_title": "chrome"}}}}
+{{"tool": "paste_from_clipboard", "args": {{}}}}
+"""
             
             system_prompt = f"""You are an RPA (Robotic Process Automation) agent that executes desktop automation tasks.
 You have access to the following tools:
@@ -143,6 +175,7 @@ When given a task instruction:
 3. Format: {{"tool": "tool_name", "args": {{"param1": "value1", "param2": "value2"}}}}
 4. Output one tool call per line
 5. Be specific with coordinates, text, and parameters
+{multi_app_guidance}
 
 Task: {instruction}
 
@@ -169,6 +202,25 @@ Generate the execution plan as a series of tool calls in JSON format:"""
             for idx, tool_call in enumerate(tool_calls, 1):
                 func_name = tool_call.get("tool")
                 func_args = tool_call.get("args", {})
+                
+                # Check if we need to focus an application before this action
+                app_to_focus = self._should_focus_application(func_name, func_args)
+                if app_to_focus and func_name != "focus_window":
+                    # Automatically focus the application if needed
+                    logger.info(f"Auto-focusing application: {app_to_focus}")
+                    focus_func = self.tool_map.get("focus_window")
+                    if focus_func:
+                        focus_result = focus_func(window_title=app_to_focus)
+                        if focus_result.success:
+                            self._update_active_application(app_to_focus)
+                
+                # Update active application context for certain tools
+                if func_name == "launch_application":
+                    app_name = func_args.get("app_name", "unknown")
+                    self._update_active_application(app_name)
+                elif func_name == "focus_window":
+                    window_title = func_args.get("window_title", "unknown")
+                    self._update_active_application(window_title)
                 
                 # Create subtask
                 subtask = Subtask(
@@ -291,6 +343,94 @@ Generate the execution plan as a series of tool calls in JSON format:"""
             first_line = doc.strip().split('\n')[0]
             descriptions.append(f"- {tool_name}: {first_line}")
         return "\n".join(descriptions)
+    
+    def _identify_applications(self, instruction: str) -> List[str]:
+        """
+        Identify applications mentioned in the instruction.
+        
+        Args:
+            instruction: Natural language task instruction
+        
+        Returns:
+            List of identified application names
+        
+        Validates: Requirements 11.1
+        """
+        # Common application keywords
+        app_keywords = {
+            "notepad": ["notepad"],
+            "chrome": ["chrome", "browser", "google chrome"],
+            "firefox": ["firefox", "mozilla"],
+            "edge": ["edge", "microsoft edge"],
+            "outlook": ["outlook", "email"],
+            "excel": ["excel", "spreadsheet"],
+            "word": ["word", "document"],
+            "powerpoint": ["powerpoint", "presentation", "slides"],
+            "calculator": ["calculator", "calc"],
+            "explorer": ["explorer", "file explorer", "files"],
+            "cmd": ["cmd", "command prompt", "terminal"],
+            "paint": ["paint", "mspaint"]
+        }
+        
+        instruction_lower = instruction.lower()
+        identified_apps = []
+        
+        for app_name, keywords in app_keywords.items():
+            for keyword in keywords:
+                if keyword in instruction_lower:
+                    if app_name not in identified_apps:
+                        identified_apps.append(app_name)
+                    break
+        
+        logger.info(f"Identified applications in instruction: {identified_apps}")
+        return identified_apps
+    
+    def _update_active_application(self, app_name: str) -> None:
+        """
+        Update the currently active application context.
+        
+        Args:
+            app_name: Name of the application now active
+        
+        Validates: Requirements 11.5
+        """
+        self.active_application = app_name
+        if app_name not in self.application_context:
+            self.application_context[app_name] = {
+                "first_accessed": datetime.now(),
+                "action_count": 0
+            }
+        
+        self.application_context[app_name]["last_accessed"] = datetime.now()
+        self.application_context[app_name]["action_count"] += 1
+        
+        logger.debug(f"Active application updated to: {app_name}")
+    
+    def _should_focus_application(self, tool_name: str, tool_args: Dict[str, Any]) -> Optional[str]:
+        """
+        Determine if an application needs to be focused before executing a tool.
+        
+        Args:
+            tool_name: Name of the tool to execute
+            tool_args: Arguments for the tool
+        
+        Returns:
+            Application name to focus, or None if no focus needed
+        
+        Validates: Requirements 11.2
+        """
+        # Tools that require application focus
+        focus_required_tools = ["click_element", "type_text", "press_key", "scroll"]
+        
+        if tool_name not in focus_required_tools:
+            return None
+        
+        # Check if we have an app_name in the context or args
+        if "app_name" in tool_args:
+            return tool_args["app_name"]
+        
+        # Return current active application if set
+        return self.active_application
     
     def _parse_tool_calls(self, response_text: str) -> List[Dict[str, Any]]:
         """

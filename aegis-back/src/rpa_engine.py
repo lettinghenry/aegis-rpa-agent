@@ -231,3 +231,23 @@ class RPAEngine:
         """
         logger.debug(f"Capturing screen state, region={region}")
         return capture_screen(region)
+
+    def execute_copy_to_clipboard(self, text: str) -> ActionResult:
+        logger.info(f'Copying text to clipboard, length={len(text)}')
+        def action():
+            return copy_to_clipboard(text)
+        return self._retry_with_backoff(action, f'copy_to_clipboard(len={len(text)})')
+    
+    def execute_paste_from_clipboard(self) -> ActionResult:
+        logger.info('Pasting text from clipboard')
+        def action():
+            return paste_from_clipboard()
+        return self._retry_with_backoff(action, 'paste_from_clipboard()')
+    
+    def get_active_window_info(self) -> ToolResult:
+        logger.debug('Getting active window information')
+        return get_active_window()
+    
+    def list_all_open_windows(self) -> ToolResult:
+        logger.debug('Listing all open windows')
+        return list_open_windows()

@@ -28,6 +28,13 @@ try:
 except ImportError:
     WINDOWS_AVAILABLE = False
 
+# Clipboard support
+try:
+    import pyperclip
+    CLIPBOARD_AVAILABLE = True
+except ImportError:
+    CLIPBOARD_AVAILABLE = False
+
 
 def tool(func):
     """
@@ -179,7 +186,7 @@ def press_key(key: str, modifiers: Optional[List[str]] = None) -> ToolResult:
 @tool
 def launch_application(app_name: str, wait_time: int = 5) -> ToolResult:
     """
-    Launch application by name or path.
+    Launch application by name or path with readiness check.
     
     Args:
         app_name: Application name or full path to executable
@@ -187,6 +194,8 @@ def launch_application(app_name: str, wait_time: int = 5) -> ToolResult:
     
     Returns:
         ToolResult with success status and process info
+    
+    Validates: Requirements 11.3
     """
     try:
         # Validate wait_time
@@ -195,6 +204,31 @@ def launch_application(app_name: str, wait_time: int = 5) -> ToolResult:
                 success=False,
                 error="Wait time must be non-negative"
             )
+        
+        # Check if application is already running (Windows only)
+        if WINDOWS_AVAILABLE:
+            # Try to find existing window with app name
+            def check_existing(hwnd, windows):
+                if win32gui.IsWindowVisible(hwnd):
+                    title = win32gui.GetWindowText(hwnd)
+                    if app_name.lower() in title.lower():
+                        windows.append((hwnd, title))
+                return True
+            
+            existing_windows = []
+            win32gui.EnumWindows(check_existing, existing_windows)
+            
+            if existing_windows:
+                # Application already running
+                return ToolResult(
+                    success=True,
+                    data={
+                        "app_name": app_name,
+                        "already_running": True,
+                        "window_count": len(existing_windows),
+                        "timestamp": time.time()
+                    }
+                )
         
         # Launch the application
         process = subprocess.Popen(app_name, shell=True)
@@ -210,6 +244,33 @@ def launch_application(app_name: str, wait_time: int = 5) -> ToolResult:
                 error=f"Application exited with code {poll_result}"
             )
         
+        # Verify application window appeared (Windows only)
+        if WINDOWS_AVAILABLE:
+            # Give a bit more time for window to appear
+            time.sleep(1)
+            
+            windows_found = []
+            win32gui.EnumWindows(check_existing, windows_found)
+            
+            if not windows_found:
+                return ToolResult(
+                    success=False,
+                    error=f"Application launched but no window appeared within {wait_time + 1}s"
+                )
+            
+            return ToolResult(
+                success=True,
+                data={
+                    "app_name": app_name,
+                    "pid": process.pid,
+                    "wait_time": wait_time,
+                    "window_ready": True,
+                    "window_count": len(windows_found),
+                    "timestamp": time.time()
+                }
+            )
+        
+        # Non-Windows platforms
         return ToolResult(
             success=True,
             data={
@@ -444,6 +505,183 @@ def scroll(direction: str, amount: int) -> ToolResult:
         )
 
 
+@tool
+def copy_to_clipboard(text: str) -> ToolResult:
+    """
+    Copy text to system clipboard for data transfer between applications.
+    
+    Args:
+        text: Text to copy to clipboard
+    
+    Returns:
+        ToolResult with success status
+    
+    Validates: Requirements 11.4
+    """
+    try:
+        if not CLIPBOARD_AVAILABLE:
+            return ToolResult(
+                success=False,
+                error="Clipboard operations require pyperclip library"
+            )
+        
+        pyperclip.copy(text)
+        
+        # Verify the copy worked
+        clipboard_content = pyperclip.paste()
+        if clipboard_content != text:
+            return ToolResult(
+                success=False,
+                error="Clipboard verification failed - content mismatch"
+            )
+        
+        return ToolResult(
+            success=True,
+            data={
+                "text_length": len(text),
+                "timestamp": time.time()
+            }
+        )
+    
+    except Exception as e:
+        return ToolResult(
+            success=False,
+            error=f"Clipboard copy failed: {str(e)}"
+        )
+
+
+@tool
+def paste_from_clipboard() -> ToolResult:
+    """
+    Paste text from system clipboard.
+    
+    Returns:
+        ToolResult with clipboard content
+    
+    Validates: Requirements 11.4
+    """
+    try:
+        if not CLIPBOARD_AVAILABLE:
+            return ToolResult(
+                success=False,
+                error="Clipboard operations require pyperclip library"
+            )
+        
+        clipboard_content = pyperclip.paste()
+        
+        return ToolResult(
+            success=True,
+            data={
+                "text": clipboard_content,
+                "text_length": len(clipboard_content),
+                "timestamp": time.time()
+            }
+        )
+    
+    except Exception as e:
+        return ToolResult(
+            success=False,
+            error=f"Clipboard paste failed: {str(e)}"
+        )
+
+
+@tool
+def get_active_window() -> ToolResult:
+    """
+    Get information about the currently active window.
+    
+    Returns:
+        ToolResult with active window information
+    
+    Validates: Requirements 11.5
+    """
+    try:
+        if not WINDOWS_AVAILABLE:
+            return ToolResult(
+                success=False,
+                error="Active window detection requires Windows platform (pywin32)"
+            )
+        
+        # Get the foreground window
+        hwnd = win32gui.GetForegroundWindow()
+        
+        if not hwnd:
+            return ToolResult(
+                success=False,
+                error="No active window found"
+            )
+        
+        # Get window title
+        title = win32gui.GetWindowText(hwnd)
+        
+        # Get process ID
+        _, pid = win32process.GetWindowThreadProcessId(hwnd)
+        
+        return ToolResult(
+            success=True,
+            data={
+                "hwnd": hwnd,
+                "title": title,
+                "pid": pid,
+                "timestamp": time.time()
+            }
+        )
+    
+    except Exception as e:
+        return ToolResult(
+            success=False,
+            error=f"Failed to get active window: {str(e)}"
+        )
+
+
+@tool
+def list_open_windows() -> ToolResult:
+    """
+    List all open windows with their titles.
+    
+    Returns:
+        ToolResult with list of open windows
+    
+    Validates: Requirements 11.1
+    """
+    try:
+        if not WINDOWS_AVAILABLE:
+            return ToolResult(
+                success=False,
+                error="Window listing requires Windows platform (pywin32)"
+            )
+        
+        def callback(hwnd, windows):
+            if win32gui.IsWindowVisible(hwnd):
+                title = win32gui.GetWindowText(hwnd)
+                if title:  # Only include windows with titles
+                    _, pid = win32process.GetWindowThreadProcessId(hwnd)
+                    windows.append({
+                        "hwnd": hwnd,
+                        "title": title,
+                        "pid": pid
+                    })
+            return True
+        
+        windows = []
+        win32gui.EnumWindows(callback, windows)
+        
+        return ToolResult(
+            success=True,
+            data={
+                "windows": windows,
+                "count": len(windows),
+                "timestamp": time.time()
+            }
+        )
+    
+    except Exception as e:
+        return ToolResult(
+            success=False,
+            error=f"Failed to list windows: {str(e)}"
+        )
+
+
 # Export all tools for ADK registration
 TOOLS = [
     click_element,
@@ -453,5 +691,9 @@ TOOLS = [
     focus_window,
     capture_screen,
     find_element_by_image,
-    scroll
+    scroll,
+    copy_to_clipboard,
+    paste_from_clipboard,
+    get_active_window,
+    list_open_windows
 ]
