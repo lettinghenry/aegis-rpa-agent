@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Auto Commit Staged Files",
+  "description": "When files are staged with git add, this hook analyzes the changes and writes an appropriate commit message, then commits the changes automatically",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Look at the currently staged git changes using `git diff --cached`. Analyze the changes carefully to understand what was modified, added, or removed. Based on this analysis, write a clear, concise, and descriptive commit message following conventional commit format (e.g., \"feat:\", \"fix:\", \"docs:\", \"refactor:\", etc.). Then execute `git commit -m \"your generated message\"` to commit the staged changes with your generated message."
+  }
+}

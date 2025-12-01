@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Requirements Change Review",
+  "description": "Monitors changes to requirements, tasks, and design documents. When fundamental changes are detected in requirements, triggers a review of tasks and design. When significant changes occur in tasks or design, triggers a review of requirements. Also updates README files when significant changes are made to any of these documents.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/specs/**/*.md",
+      ".kiro/steering/**/*.md",
+      "README.md",
+      "*/README.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A specification or steering document has been modified. Analyze the changes and determine:\n\n1. If requirements files (product.md, feature specs) were changed:\n   - Review if tasks need to be updated or created\n   - Review if design documents (tech.md, structure.md) need updates\n   - Check if README.md needs updates to reflect new requirements\n\n2. If design/architecture files (tech.md, structure.md) were changed:\n   - Review if requirements are still aligned\n   - Review if tasks need updates\n   - Check if README.md needs updates to reflect architectural changes\n\n3. If task files were changed:\n   - Review if requirements are still accurate\n   - Review if design supports the tasks\n   - Check if README.md needs updates\n\n4. If significant changes were made to any of these:\n   - Update the relevant README.md file(s) to reflect the changes\n   - Ensure consistency across all documentation\n\nProvide a summary of what needs to be reviewed or updated, and make the necessary changes to maintain consistency across requirements, tasks, design, and documentation."
+  }
+}
