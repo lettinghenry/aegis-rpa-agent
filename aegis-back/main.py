@@ -14,7 +14,7 @@ import asyncio
 from typing import Optional
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -34,13 +34,24 @@ from src.adk_agent import ADKAgentManager
 from src.session_manager import SessionManager
 from src.history_store import HistoryStore
 from src.websocket_manager import WebSocketManager
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+from src.exceptions import (
+    AEGISException,
+    ValidationError,
+    ClientError,
+    SystemError,
+    SessionNotFoundError,
+    InvalidSessionStateError
 )
-logger = logging.getLogger(__name__)
+from src.logging_utils import setup_logging, get_session_logger, set_session_context, clear_session_context
+from src.resource_manager import ResourceManager
+
+# Configure logging with session context support
+setup_logging(
+    log_level=os.getenv("LOG_LEVEL", "INFO"),
+    use_json=os.getenv("USE_JSON_LOGS", "false").lower() == "true",
+    log_file=os.getenv("LOG_FILE", None)
+)
+logger = get_session_logger(__name__)
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -98,10 +109,10 @@ async def start_task(request: TaskInstructionRequest):
         TaskInstructionResponse with session_id and status
     
     Raises:
-        HTTPException 422: If instruction validation fails
-        HTTPException 500: If session creation fails
+        ValidationError: If instruction validation fails
+        SystemError: If session creation fails
     
-    Validates: Requirement 7.1
+    Validates: Requirement 7.1, 9.2, 9.3
     """
     try:
         logger.info(f"Received task instruction: {request.instruction}")
@@ -111,9 +122,10 @@ async def start_task(request: TaskInstructionRequest):
         
         if not validation_result.is_valid:
             logger.warning(f"Instruction validation failed: {validation_result.error_message}")
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=validation_result.error_message
+            from src.exceptions import InstructionValidationError
+            raise InstructionValidationError(
+                message="Task instruction validation failed",
+                details=validation_result.error_message
             )
         
         # Create execution session
@@ -129,13 +141,14 @@ async def start_task(request: TaskInstructionRequest):
             message="Task queued for execution"
         )
         
-    except HTTPException:
+    except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Error starting task: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start task: {str(e)}"
+        logger.error(f"Error starting task: {e}", exc_info=True)
+        from src.exceptions import SystemError as AEGISSystemError
+        raise AEGISSystemError(
+            message="Failed to start task",
+            details=str(e)
         )
 
 
@@ -203,9 +216,9 @@ async def get_session_details(session_id: str):
             session = history_store.get_session_details(session_id)
         
         if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Session {session_id} not found"
+            raise SessionNotFoundError(
+                session_id=session_id,
+                details="Session not found in active sessions or history"
             )
         
         return session
@@ -251,20 +264,21 @@ async def cancel_execution(session_id: str):
             # Check history store for completed sessions
             session = history_store.get_session_details(session_id)
             if session:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Session {session_id} already completed and cannot be cancelled"
+                raise InvalidSessionStateError(
+                    session_id=session_id,
+                    current_state=session.status,
+                    operation="cancel",
+                    details="Session already completed and cannot be cancelled"
                 )
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Session {session_id} not found"
-            )
+            raise SessionNotFoundError(session_id=session_id)
         
         # Check if session can be cancelled
         if session.status in ["completed", "failed", "cancelled"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot cancel session with status: {session.status}"
+            raise InvalidSessionStateError(
+                session_id=session_id,
+                current_state=session.status,
+                operation="cancel",
+                details=f"Cannot cancel session with status: {session.status}"
             )
         
         # Cancel the session (this will be picked up by the queue processor)
@@ -359,21 +373,31 @@ async def process_execution_queue():
     Integrates: Pre-Processing → Plan Cache → ADK Agent → RPA Engine → Action Observer
     Connects: Session Manager ↔ WebSocket Manager ↔ History Store
     
-    Validates: Requirements 2.1, 2.3, 1.3, 6.5, 8.4, 13.1, 13.3, 13.4, 13.5
+    Validates: Requirements 2.1, 2.3, 1.3, 6.5, 8.4, 8.5, 13.1, 13.3, 13.4, 13.5
     """
     logger.info("Starting execution queue processor")
     
     while True:
+        session_id = None
+        resource_manager = None
+        
         try:
             # Wait for next session in queue
             session_id = await request_queue.get()
-            logger.info(f"Processing session from queue: {session_id}")
+            logger.info(f"Processing session from queue: {session_id}", session_id=session_id)
+            
+            # Set session context for logging
+            token = set_session_context(session_id)
+            
+            # Create resource manager for this session
+            resource_manager = ResourceManager(session_id)
             
             # Get session from session manager
             session = session_manager.get_session(session_id)
             if not session:
-                logger.error(f"Session {session_id} not found in queue processor")
+                logger.error(f"Session {session_id} not found in queue processor", session_id=session_id)
                 request_queue.task_done()
+                clear_session_context(token)
                 continue
             
             # Update session status to in_progress
@@ -474,8 +498,13 @@ async def process_execution_queue():
                         logger.info(f"Stored execution plan in cache for session {session_id}")
                 
             except asyncio.CancelledError:
-                # Handle cancellation
-                logger.info(f"Session {session_id} execution cancelled")
+                # Handle cancellation with resource cleanup
+                logger.info(f"Session {session_id} execution cancelled", session_id=session_id)
+                
+                # Cleanup resources
+                if resource_manager:
+                    await resource_manager.cleanup_all(suppress_errors=True)
+                
                 session = session_manager.get_session(session_id)
                 if session:
                     session.status = "cancelled"
@@ -496,12 +525,20 @@ async def process_execution_queue():
                         timestamp=datetime.now()
                     )
                     await websocket_manager.broadcast_update(session_id, cancel_update)
-                    logger.info(f"Sent WINDOW_STATE_NORMAL after cancellation for session {session_id}")
+                    logger.info(f"Sent WINDOW_STATE_NORMAL after cancellation", session_id=session_id)
                 
                 raise
                 
             except Exception as e:
-                logger.error(f"Error executing session {session_id}: {e}", exc_info=True)
+                logger.error(
+                    f"Error executing session: {str(e)}",
+                    session_id=session_id,
+                    exc_info=True
+                )
+                
+                # Cleanup resources on error
+                if resource_manager:
+                    await resource_manager.cleanup_all(suppress_errors=True)
                 
                 # Mark session as failed
                 session = session_manager.get_session(session_id)
@@ -514,27 +551,49 @@ async def process_execution_queue():
                     # Save failed session to history
                     history_store.save_session(session)
                     
+                    # Determine error message based on exception type
+                    from src.exceptions import AEGISException
+                    if isinstance(e, AEGISException):
+                        error_message = e.message
+                        error_details = e.details
+                    else:
+                        error_message = "Execution failed due to unexpected error"
+                        error_details = str(e)
+                    
                     # Send failure update with window restore
                     failure_update = StatusUpdate(
                         session_id=session_id,
                         subtask=None,
                         overall_status="failed",
-                        message=f"Execution failed: {str(e)}",
+                        message=f"{error_message}: {error_details}",
                         window_state="normal",
                         timestamp=datetime.now()
                     )
                     await websocket_manager.broadcast_update(session_id, failure_update)
-                    logger.info(f"Sent WINDOW_STATE_NORMAL after failure for session {session_id}")
+                    logger.info(f"Sent WINDOW_STATE_NORMAL after failure", session_id=session_id)
             
             # Mark task as done in queue
             request_queue.task_done()
-            logger.info(f"Completed processing session {session_id}")
+            logger.info(f"Completed processing session", session_id=session_id)
+            
+            # Clear session context
+            if session_id:
+                clear_session_context(token)
             
         except asyncio.CancelledError:
             logger.info("Execution queue processor cancelled")
+            # Cleanup any remaining resources
+            if resource_manager:
+                await resource_manager.cleanup_all(suppress_errors=True)
             break
         except Exception as e:
-            logger.error(f"Error in execution queue processor: {e}", exc_info=True)
+            logger.error(f"Error in execution queue processor: {e}", session_id=session_id, exc_info=True)
+            # Cleanup resources on error
+            if resource_manager:
+                await resource_manager.cleanup_all(suppress_errors=True)
+            # Clear session context
+            if session_id:
+                clear_session_context(token)
             await asyncio.sleep(1)  # Prevent tight loop on errors
 
 
@@ -605,14 +664,87 @@ async def shutdown_event():
         logger.error(f"Error during shutdown: {e}")
 
 
+@app.exception_handler(ValidationError)
+async def validation_error_handler(request: Request, exc: ValidationError):
+    """
+    Handle validation errors (HTTP 422).
+    
+    Validates: Requirement 9.2
+    """
+    logger.warning(
+        f"Validation error: {exc.message}",
+        session_id=exc.session_id,
+        extra_data=exc.context
+    )
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=exc.to_dict()
+    )
+
+
+@app.exception_handler(ClientError)
+async def client_error_handler(request: Request, exc: ClientError):
+    """
+    Handle client errors (HTTP 400).
+    """
+    logger.warning(
+        f"Client error: {exc.message}",
+        session_id=exc.session_id,
+        extra_data=exc.context
+    )
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content=exc.to_dict()
+    )
+
+
+@app.exception_handler(SystemError)
+async def system_error_handler(request: Request, exc: SystemError):
+    """
+    Handle system errors (HTTP 500).
+    
+    Validates: Requirement 8.1
+    """
+    logger.error(
+        f"System error: {exc.message}",
+        session_id=exc.session_id,
+        extra_data=exc.context
+    )
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=exc.to_dict()
+    )
+
+
+@app.exception_handler(AEGISException)
+async def aegis_exception_handler(request: Request, exc: AEGISException):
+    """
+    Handle all AEGIS-specific exceptions.
+    """
+    logger.error(
+        f"AEGIS exception: {exc.message}",
+        session_id=exc.session_id,
+        extra_data=exc.context
+    )
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=exc.to_dict()
+    )
+
+
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    """Global exception handler for unhandled errors"""
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Global exception handler for unhandled errors.
+    
+    Validates: Requirement 8.1
+    """
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
-            "error": "Internal server error",
+            "error": "InternalServerError",
+            "message": "An unexpected error occurred",
             "details": str(exc)
         }
     )
