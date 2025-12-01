@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Auto-stage files on agent completion",
+  "description": "Automatically stages all files using 'git add .' when an agent task completes successfully",
+  "version": "1",
+  "when": {
+    "type": "agentEnd"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git add ."
+  }
+}

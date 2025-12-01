@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Auto-commit staged changes",
+  "description": "When files are staged with git add, this hook analyzes the changes and writes an appropriate commit message, then commits the changes automatically",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": []
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git diff --cached | head -n 100 > /tmp/staged_changes.txt && echo \"Analyzing staged changes and committing...\" && git commit -m \"$(git diff --cached --stat | awk '{print $1}' | head -n 5 | tr '\\n' ',' | sed 's/,$//' | xargs -I {} echo 'Update: {}')\""
+  }
+}

@@ -1,0 +1,44 @@
+name: aegis_front
+description: AEGIS RPA Frontend - Flutter application for commanding and monitoring the AEGIS RPA Backend
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Networking
+  http: ^1.1.2
+  web_socket_channel: ^2.4.0
+  
+  # Local Storage
+  shared_preferences: ^2.2.2
+  
+  # Utilities
+  uuid: ^4.2.2
+  
+  # Window Management
+  window_manager: ^0.3.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Property-based testing
+  test: ^1.24.9
+  
+  # Mocking
+  mockito: ^5.4.4
+  build_runner: ^2.4.7
+  
+  # Linting
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true

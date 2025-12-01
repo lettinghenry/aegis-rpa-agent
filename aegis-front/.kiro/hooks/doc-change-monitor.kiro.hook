@@ -1,0 +1,24 @@
+{
+  "enabled": true,
+  "name": "Documentation Change Monitor",
+  "description": "Monitors changes to requirements, tasks, and design documents. When fundamental changes are detected in requirements, triggers a review of tasks and design. When significant changes occur in tasks or design, triggers a review of requirements. Also updates README files when significant changes are made to any of these documents.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*requirements*.md",
+      "**/*tasks*.md",
+      "**/*design*.md",
+      "**/*spec*.md",
+      "**/*product*.md",
+      "**/*structure*.md",
+      "**/*tech*.md",
+      "**/specs/**/*.md",
+      ".kiro/**/*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A documentation file has been modified: {{file_path}}\n\nPlease analyze the changes and determine:\n\n1. **If this is a requirements/product specification file**: Review whether the changes are fundamental (affecting core features, user flows, or system architecture). If so, trigger a review of related task lists and design documents to ensure alignment.\n\n2. **If this is a tasks/implementation file**: Review whether the changes are significant (new features, changed approaches, or removed functionality). If so, trigger a review of requirements documents to ensure they still accurately reflect the implementation.\n\n3. **If this is a design/architecture file**: Review whether the changes are significant (architectural shifts, technology changes, or structural modifications). If so, trigger a review of requirements to ensure alignment.\n\n4. **For any significant changes**: Check if the README files (aegis-front/README.md and aegis-back/README.md) need to be updated to reflect the changes. Update them if necessary to keep documentation in sync.\n\nProvide a summary of:\n- What type of document was changed\n- Whether the changes are fundamental/significant\n- What related documents should be reviewed\n- Whether README files need updates\n- Specific recommendations for maintaining consistency across documentation"
+  }
+}
