@@ -96,16 +96,31 @@ def click_element(x: int, y: int, button: str = "left") -> ToolResult:
 
 
 @tool
-def type_text(text: str, interval: float = 0.05) -> ToolResult:
+def type_text(
+    text: str,
+    interval: float = 0.05,
+    verify_focus: bool = True,
+    clear_existing: bool = False,
+    verify_result: bool = True,
+    expected_window: Optional[str] = None,
+    use_intelligent: bool = True
+) -> ToolResult:
     """
-    Type text into the currently focused element.
+    Type text into the currently focused element with intelligent features.
     
     Args:
         text: Text to type
-        interval: Delay between keystrokes in seconds (default: 0.05)
+        interval: Delay between keystrokes in seconds (default: 0.05, ignored if use_intelligent=True)
+        verify_focus: Whether to verify focus before typing (default: True)
+        clear_existing: Whether to clear existing text first (default: False)
+        verify_result: Whether to verify the typed text (default: True)
+        expected_window: Optional window title to verify focus
+        use_intelligent: Whether to use intelligent text input features (default: True)
     
     Returns:
         ToolResult with success status
+    
+    Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5
     """
     try:
         # Validate interval
@@ -115,7 +130,19 @@ def type_text(text: str, interval: float = 0.05) -> ToolResult:
                 error="Interval must be non-negative"
             )
         
-        # Type the text
+        # Use intelligent text input if enabled
+        if use_intelligent:
+            from src.intelligent_text_input import intelligent_text_input
+            return intelligent_text_input.type_with_intelligence(
+                text=text,
+                verify_focus=verify_focus,
+                clear_existing=clear_existing,
+                verify_result=verify_result,
+                expected_window=expected_window,
+                use_human_speed=True
+            )
+        
+        # Fallback to basic typing
         pyautogui.write(text, interval=interval)
         
         return ToolResult(
@@ -123,6 +150,7 @@ def type_text(text: str, interval: float = 0.05) -> ToolResult:
             data={
                 "text_length": len(text),
                 "interval": interval,
+                "intelligent_mode": False,
                 "timestamp": time.time()
             }
         )
