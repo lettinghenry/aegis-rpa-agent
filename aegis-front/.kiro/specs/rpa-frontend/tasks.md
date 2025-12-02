@@ -105,7 +105,12 @@
   - **Property 23: Session Detail Request**
   - **Validates: Requirements 2.3, 5.3, 6.2, 6.4**
 
-- [ ] 5. Implement WebSocket Service
+- [x] 5. Implement WebSocket Service
+
+
+
+
+
   - Create lib/services/websocket_service.dart
   - Implement connect() to establish WebSocket connection
   - Implement disconnect() to close connection
@@ -114,7 +119,9 @@
   - Add connection state tracking
   - _Requirements: 3.1, 7.2, 7.3_
 
-- [ ] 5.1 Implement Window Service
+- [x] 5.1 Implement Window Service
+
+
   - Create lib/services/window_service.dart
   - Implement enterMinimalMode() to resize window to 300x100, set always on top, remove decorations
   - Implement exitMinimalMode() to restore original size, position, and decorations
