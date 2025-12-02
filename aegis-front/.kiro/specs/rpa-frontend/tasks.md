@@ -329,7 +329,13 @@
   - Implement navigation to History View on history tap
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 6.1_
 
-- [ ]* 10.1 Write widget tests for landing screen
+- [x] 10.1 Write widget tests for landing screen
+
+
+
+
+
+
   - Test UI elements presence
   - Test submit button state based on input
   - Test submission flow
