@@ -77,7 +77,12 @@
   - **Property 1: Onboarding Flag Storage**
   - **Validates: Requirements 1.3**
 
-- [ ] 4. Implement Backend API Service
+- [x] 4. Implement Backend API Service
+
+
+
+
+
   - Create lib/services/backend_api_service.dart
   - Implement startTask() for POST /api/start_task
   - Implement getHistory() for GET /api/history
