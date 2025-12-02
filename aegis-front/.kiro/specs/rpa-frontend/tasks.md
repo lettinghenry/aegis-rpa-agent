@@ -300,13 +300,24 @@
   - Call AppState.completeOnboarding() on completion
   - _Requirements: 1.1, 1.2, 1.3, 1.5_
 
-- [ ]* 9.1 Write widget tests for onboarding screen
+- [x] 9.1 Write widget tests for onboarding screen
+
+
+
+
+
+
   - Test UI elements presence
   - Test "Get Started" button navigation
   - Test onboarding completion
   - _Requirements: 1.2, 1.5_
 
-- [ ] 10. Implement Landing Screen
+- [x] 10. Implement Landing Screen
+
+
+
+
+
   - Create lib/screens/landing_screen.dart
   - Add app bar with title and history icon
   - Add large text input field with hint text
