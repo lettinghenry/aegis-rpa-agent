@@ -228,7 +228,15 @@
   - Mock services
   - _Requirements: 2.3, 3.1, 5.3_
 
-- [ ] 7.2 Write property test for execution state
+- [-] 7.2 Write property test for execution state
+
+
+
+
+
+
+
+
 
   - **Property 6: WebSocket Connection Establishment**
   - **Property 7: Subtask Card Addition**
@@ -242,7 +250,12 @@
   - Test window restores on cancellation
   - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [ ] 8. Implement History State
+- [x] 8. Implement History State
+
+
+
+
+
   - Create lib/state/history_state.dart with HistoryStateNotifier
   - Implement loadHistory() to fetch sessions
   - Track sessions list, loading state, error message
