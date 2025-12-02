@@ -262,7 +262,13 @@
   - Add notifyListeners() calls
   - _Requirements: 6.2, 6.3_
 
-- [ ]* 8.1 Write unit tests for history state
+- [x] 8.1 Write unit tests for history state
+
+
+
+
+
+
   - Test history loading
   - Test error handling
   - Test state change notifications
