@@ -215,7 +215,12 @@
   - Call WindowService.exitMinimalMode() on WINDOW_STATE_NORMAL or completion
   - _Requirements: 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5, 5.3, 5.4, 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [ ]* 7.1 Write unit tests for execution state
+- [x] 7.1 Write unit tests for execution state
+
+
+
+
+
   - Test execution start flow
   - Test status update handling
   - Test cancellation flow
@@ -223,13 +228,14 @@
   - Mock services
   - _Requirements: 2.3, 3.1, 5.3_
 
-- [ ]* 7.2 Write property test for execution state
+- [ ] 7.2 Write property test for execution state
+
   - **Property 6: WebSocket Connection Establishment**
   - **Property 7: Subtask Card Addition**
   - **Property 19: Cancellation Cleanup**
   - **Validates: Requirements 3.1, 3.2, 5.4**
 
-- [ ]* 7.3 Write unit tests for window state handling
+- [x] 7.3 Write unit tests for window state handling
   - Test window enters minimal mode on WINDOW_STATE_MINIMAL command
   - Test window restores on WINDOW_STATE_NORMAL command
   - Test window restores on execution completion
