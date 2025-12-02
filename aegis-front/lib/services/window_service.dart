@@ -52,6 +52,7 @@ class WindowService {
     } catch (e) {
       // Log error but don't throw - window management is not critical
       print('Error entering minimal mode: $e');
+      // Don't update state if window operations failed
     }
   }
 

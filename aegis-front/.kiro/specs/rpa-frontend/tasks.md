@@ -152,7 +152,13 @@
   - Mock WebSocketChannel
   - _Requirements: 3.1, 7.2_
 
-- [ ]* 5.2 Write unit tests for Window Service
+- [x] 5.2 Write unit tests for Window Service
+
+
+
+
+
+
   - Test enterMinimalMode() saves state and resizes window
   - Test exitMinimalMode() restores original state
   - Test edge cases (null saved state, invalid positions)
