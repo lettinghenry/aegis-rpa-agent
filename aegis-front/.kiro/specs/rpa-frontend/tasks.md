@@ -165,7 +165,13 @@
   - Mock window_manager
   - _Requirements: 13.2, 13.3, 13.4_
 
-- [ ]* 5.3 Write property test for WebSocket reconnection
+- [x] 5.3 Write property test for WebSocket reconnection
+
+
+
+
+
+
   - **Property 26: WebSocket Reconnection Attempts**
   - **Validates: Requirements 7.2**
 
