@@ -187,7 +187,13 @@
   - Add notifyListeners() calls
   - _Requirements: 1.3, 1.4_
 
-- [ ]* 6.1 Write unit tests for app state
+- [x] 6.1 Write unit tests for app state
+
+
+
+
+
+
   - Test onboarding status loading
   - Test onboarding completion
   - Test state change notifications
