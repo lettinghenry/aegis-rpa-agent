@@ -61,7 +61,13 @@
   - Add error handling for storage operations
   - _Requirements: 1.3, 1.4_
 
-- [ ]* 3.1 Write unit tests for storage service
+- [x] 3.1 Write unit tests for storage service
+
+
+
+
+
+
   - Test reading and writing onboarding flag
   - Test error handling
   - Mock SharedPreferences
