@@ -130,7 +130,15 @@
   - Handle edge cases (multiple monitors, screen resolution changes)
   - _Requirements: 13.2, 13.3, 13.4_
 
-- [ ]* 5.1 Write unit tests for WebSocket service
+- [x] 5.1 Write unit tests for WebSocket service
+
+
+
+
+
+
+
+
   - Test connection establishment
   - Test message parsing
   - Test reconnection logic
