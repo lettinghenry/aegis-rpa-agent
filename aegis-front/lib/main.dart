@@ -7,7 +7,6 @@ import 'state/execution_state.dart';
 import 'state/history_state.dart';
 import 'services/backend_api_service.dart';
 import 'services/websocket_service.dart';
-import 'services/storage_service.dart';
 import 'services/window_service.dart';
 import 'theme/app_theme.dart';
 
@@ -69,14 +68,14 @@ class AegisApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<ExecutionStateNotifier>(
           create: (context) => ExecutionStateNotifier(
-            backendApiService: backendApiService,
-            websocketService: websocketService,
+            apiService: backendApiService,
+            wsService: websocketService,
             windowService: windowService,
           ),
         ),
         ChangeNotifierProvider<HistoryStateNotifier>(
           create: (context) => HistoryStateNotifier(
-            backendApiService: backendApiService,
+            apiService: backendApiService,
           ),
         ),
       ],
@@ -86,8 +85,8 @@ class AegisApp extends StatelessWidget {
           if (appState.isLoading) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
+              theme: AppTheme.lightTheme(),
+              darkTheme: AppTheme.darkTheme(),
               themeMode: ThemeMode.system,
               home: const Scaffold(
                 body: Center(
@@ -105,8 +104,8 @@ class AegisApp extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'AEGIS RPA Frontend',
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
+            theme: AppTheme.lightTheme(),
+            darkTheme: AppTheme.darkTheme(),
             themeMode: ThemeMode.system,
             initialRoute: initialRoute,
             onGenerateRoute: AppRouter.onGenerateRoute,
