@@ -343,7 +343,13 @@
   - Test navigation
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ]* 10.2 Write property test for submit button state
+- [x] 10.2 Write property test for submit button state
+
+
+
+
+
+
   - **Property 2: Submit Button State**
   - **Validates: Requirements 2.2**
 
