@@ -583,7 +583,13 @@
   - Test theme switching
   - _Requirements: 8.2_
 
-- [ ]* 16.2 Write property test for status color coding
+- [x] 16.2 Write property test for status color coding
+
+
+
+
+
+
   - **Property 30: Status Color Coding**
   - **Validates: Requirements 8.2**
 
