@@ -570,7 +570,14 @@
   - Configure ThemeData with Material 3 components
   - _Requirements: 8.1, 8.2, 8.4, 8.5_
 
-- [ ]* 16.1 Write tests for theme
+- [x] 16.1 Write tests for theme
+
+
+
+
+
+
+
   - Test color scheme definitions
   - Test status color mappings
   - Test theme switching
