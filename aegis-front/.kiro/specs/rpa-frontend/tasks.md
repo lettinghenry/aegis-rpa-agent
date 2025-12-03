@@ -669,7 +669,14 @@
   - Add connection status indicator
   - _Requirements: 7.2, 7.3, 9.3, 9.4, 9.5_
 
-- [ ]* 19.1 Write tests for WebSocket lifecycle
+- [x] 19.1 Write tests for WebSocket lifecycle
+
+
+
+
+
+
+
   - Test connection establishment
   - Test reconnection attempts
   - Test backgrounding behavior
