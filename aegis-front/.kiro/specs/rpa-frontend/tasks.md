@@ -403,7 +403,12 @@
   - Use Material 3 Card with elevation 1
   - _Requirements: 3.3, 3.4, 3.5, 11.1, 11.2, 11.3, 11.4_
 
-- [ ]* 12.1 Write widget tests for subtask card
+- [x] 12.1 Write widget tests for subtask card
+
+
+
+
+
   - Test card display for each status
   - Test icon display
   - Test error message display
