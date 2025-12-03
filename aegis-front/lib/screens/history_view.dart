@@ -67,78 +67,102 @@ class _HistoryViewState extends State<HistoryView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Execution History'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => AppRouter.navigateBack(context),
+        leading: Semantics(
+          button: true,
+          label: 'Back',
+          hint: 'Tap to go back to the previous screen',
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => AppRouter.navigateBack(context),
+          ),
         ),
       ),
       body: Consumer<HistoryStateNotifier>(
         builder: (context, historyState, child) {
           // Show loading indicator on initial load
           if (historyState.isLoading && historyState.sessions.isEmpty) {
-            return LoadingIndicator.buildCentered(
-              context,
-              message: 'Loading history...',
-            );
-          }
-
-          // Show error state with retry option
-          if (historyState.errorMessage != null &&
-              historyState.sessions.isEmpty) {
-            return ErrorHandler.buildFullScreenError(
-              context,
-              historyState.errorMessage!,
-              onRetry: _loadHistory,
-            );
-          }
-
-          // Show empty state when no sessions
-          if (historyState.sessions.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.history,
-                      size: 64,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No execution history',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Your automation sessions will appear here',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+            return Semantics(
+              liveRegion: true,
+              label: 'Loading history',
+              child: LoadingIndicator.buildCentered(
+                context,
+                message: 'Loading history...',
               ),
             );
           }
 
+            // Show error state with retry option
+            if (historyState.errorMessage != null &&
+                historyState.sessions.isEmpty) {
+              return Semantics(
+                liveRegion: true,
+                label: 'Error loading history: ${historyState.errorMessage}',
+                child: ErrorHandler.buildFullScreenError(
+                  context,
+                  historyState.errorMessage!,
+                  onRetry: _loadHistory,
+                ),
+              );
+            }
+
+            // Show empty state when no sessions
+            if (historyState.sessions.isEmpty) {
+              return Semantics(
+                label: 'No execution history. Your automation sessions will appear here',
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ExcludeSemantics(
+                          child: Icon(
+                            Icons.history,
+                            size: 64,
+                            color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No execution history',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Your automation sessions will appear here',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
           // Show session list with pull-to-refresh
-          return RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              itemCount: historyState.sessions.length,
-              itemBuilder: (context, index) {
-                final session = historyState.sessions[index];
-                return SessionSummaryCard(
-                  session: session,
-                  onTap: () => _onSessionTapped(session.sessionId),
-                );
-              },
+          return Semantics(
+            label: '${historyState.sessions.length} execution session${historyState.sessions.length != 1 ? 's' : ''}',
+            child: RefreshIndicator(
+              onRefresh: _onRefresh,
+              child: Semantics(
+                label: 'Pull down to refresh history',
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  itemCount: historyState.sessions.length,
+                  itemBuilder: (context, index) {
+                    final session = historyState.sessions[index];
+                    return SessionSummaryCard(
+                      session: session,
+                      onTap: () => _onSessionTapped(session.sessionId),
+                    );
+                  },
+                ),
+              ),
             ),
           );
         },

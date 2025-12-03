@@ -28,68 +28,78 @@ class SessionSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12.0),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row with status badge
-              Row(
+    final statusInfo = _getStatusInfo();
+    final accessibilityLabel = '${statusInfo.label} session. ${_truncateInstruction(session.instruction)}. ${session.subtaskCount} subtask${session.subtaskCount != 1 ? 's' : ''}. ${_formatTimestamp(session.createdAt)}';
+
+    return Semantics(
+      button: true,
+      label: accessibilityLabel,
+      hint: 'Tap to view session details',
+      child: Card(
+        elevation: 1,
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Status badge
-                  _buildStatusBadge(theme, colorScheme),
-                  const Spacer(),
-                  // Timestamp
+                  // Header row with status badge
+                  Row(
+                    children: [
+                      // Status badge
+                      _buildStatusBadge(theme, colorScheme),
+                      const Spacer(),
+                      // Timestamp
+                      Text(
+                        _formatTimestamp(session.createdAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+              
+                  const SizedBox(height: 12.0),
+                  
+                  // Instruction (truncated)
                   Text(
-                    _formatTimestamp(session.createdAt),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                    _truncateInstruction(session.instruction),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  
+                  const SizedBox(height: 8.0),
+                  
+                  // Subtask count
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.list_alt,
+                        size: 16.0,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4.0),
+                      Text(
+                        '${session.subtaskCount} subtask${session.subtaskCount != 1 ? 's' : ''}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 12.0),
-              
-              // Instruction (truncated)
-              Text(
-                _truncateInstruction(session.instruction),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              
-              const SizedBox(height: 8.0),
-              
-              // Subtask count
-              Row(
-                children: [
-                  Icon(
-                    Icons.list_alt,
-                    size: 16.0,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4.0),
-                  Text(
-                    '${session.subtaskCount} subtask${session.subtaskCount != 1 ? 's' : ''}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

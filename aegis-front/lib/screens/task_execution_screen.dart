@@ -94,10 +94,15 @@ class _TaskExecutionScreenState extends State<TaskExecutionScreen> {
         actions: [
           // Cancel button (shown during active execution)
           if (executionState.status == SessionStatus.inProgress)
-            IconButton(
-              icon: const Icon(Icons.cancel),
-              onPressed: () => _showCancelDialog(context, executionState),
-              tooltip: 'Cancel Execution',
+            Semantics(
+              button: true,
+              label: 'Cancel execution',
+              hint: 'Tap to cancel the current automation',
+              child: IconButton(
+                icon: const Icon(Icons.cancel),
+                onPressed: () => _showCancelDialog(context, executionState),
+                tooltip: 'Cancel Execution',
+              ),
             ),
         ],
       ),
@@ -132,45 +137,51 @@ class _TaskExecutionScreenState extends State<TaskExecutionScreen> {
     final currentSubtask = _getCurrentSubtask(executionState);
     final description = currentSubtask?.description ?? 'Processing...';
 
-    return Material(
-      color: colorScheme.surface,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Current subtask description (truncated)
-            Expanded(
-              child: Row(
-                children: [
-                  // Progress indicator
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colorScheme.primary,
-                    ),
+    return Semantics(
+      label: 'Minimal execution view. Current task: $description',
+      liveRegion: true,
+      child: Material(
+        color: colorScheme.surface,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Current subtask description (truncated)
+                Expanded(
+                  child: Row(
+                    children: [
+                      // Progress indicator
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Description
+                      Expanded(
+                        child: Text(
+                          description,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  // Description
-                  Expanded(
-                    child: Text(
-                      description,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                // Progress bar
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  color: colorScheme.primary,
+                ),
+              ],
             ),
-            // Progress bar
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              color: colorScheme.primary,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -183,26 +194,31 @@ class _TaskExecutionScreenState extends State<TaskExecutionScreen> {
   ) {
     final theme = Theme.of(context);
 
-    return Card(
-      margin: const EdgeInsets.all(16),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Task Instruction',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+    return Semantics(
+      label: 'Task instruction: ${executionState.instruction ?? 'No instruction'}',
+      child: Card(
+        margin: const EdgeInsets.all(16),
+        elevation: 1,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ExcludeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Task Instruction',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  executionState.instruction ?? 'No instruction',
+                  style: theme.textTheme.bodyLarge,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              executionState.instruction ?? 'No instruction',
-              style: theme.textTheme.bodyLarge,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -250,35 +266,41 @@ class _TaskExecutionScreenState extends State<TaskExecutionScreen> {
         break;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: statusColor.withValues(alpha: 0.1),
-      child: Row(
-        children: [
-          Icon(statusIcon, color: statusColor, size: 24),
-          const SizedBox(width: 12),
-          Text(
-            statusText,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: statusColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (executionState.status == SessionStatus.inProgress) ...[
-            const SizedBox(width: 12),
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: statusColor,
+    return Semantics(
+      label: 'Execution status: $statusText',
+      liveRegion: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: statusColor.withValues(alpha: 0.1),
+        child: ExcludeSemantics(
+          child: Row(
+            children: [
+              Icon(statusIcon, color: statusColor, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                statusText,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: statusColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
-          const Spacer(),
-          // Connection status indicator
-          _buildConnectionStatusIndicator(context, executionState),
-        ],
+              if (executionState.status == SessionStatus.inProgress) ...[
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: statusColor,
+                  ),
+                ),
+              ],
+              const Spacer(),
+              // Connection status indicator
+              _buildConnectionStatusIndicator(context, executionState),
+            ],
+          ),
+        ),
       ),
     );
   }

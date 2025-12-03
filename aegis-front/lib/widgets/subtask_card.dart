@@ -26,65 +26,92 @@ class SubtaskCard extends StatelessWidget {
     final backgroundColor = _getBackgroundColor(colorScheme);
     final opacity = isCompleted ? 0.6 : 1.0;
 
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        side: isInProgress
-            ? BorderSide(color: statusColor, width: 2.0)
-            : BorderSide.none,
-      ),
-      color: backgroundColor,
-      child: Opacity(
-        opacity: opacity,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Status icon
-              _buildStatusIcon(statusColor),
-              const SizedBox(width: 16.0),
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Description
-                    Text(
-                      subtask.description,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight:
-                            isInProgress ? FontWeight.w600 : FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 8.0),
-                    // Timestamp
-                    Text(
-                      _formatTimestamp(subtask.timestamp),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    // Error message (if failed)
-                    if (isFailed && subtask.error != null) ...[
-                      const SizedBox(height: 8.0),
-                      Text(
-                        subtask.error!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: _getErrorColor(colorScheme),
-                        ),
-                      ),
-                    ],
-                  ],
+    // Build accessibility label
+    final statusText = _getStatusText();
+    final errorText = isFailed && subtask.error != null ? '. Error: ${subtask.error}' : '';
+    final accessibilityLabel = '$statusText. ${subtask.description}. ${_formatTimestamp(subtask.timestamp)}$errorText';
+
+    return Semantics(
+      label: accessibilityLabel,
+      liveRegion: isInProgress,
+      child: Card(
+        elevation: 1,
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          side: isInProgress
+              ? BorderSide(color: statusColor, width: 2.0)
+              : BorderSide.none,
+        ),
+        color: backgroundColor,
+        child: Opacity(
+          opacity: opacity,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Status icon
+                ExcludeSemantics(
+                  child: _buildStatusIcon(statusColor),
                 ),
-              ),
-            ],
+                const SizedBox(width: 16.0),
+                // Content
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Description
+                        Text(
+                          subtask.description,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight:
+                                isInProgress ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 8.0),
+                        // Timestamp
+                        Text(
+                          _formatTimestamp(subtask.timestamp),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        // Error message (if failed)
+                        if (isFailed && subtask.error != null) ...[
+                          const SizedBox(height: 8.0),
+                          Text(
+                            subtask.error!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: _getErrorColor(colorScheme),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// Get status text for accessibility
+  String _getStatusText() {
+    switch (subtask.status) {
+      case SubtaskStatus.pending:
+        return 'Pending';
+      case SubtaskStatus.inProgress:
+        return 'In progress';
+      case SubtaskStatus.completed:
+        return 'Completed';
+      case SubtaskStatus.failed:
+        return 'Failed';
+    }
   }
 
   /// Build status icon based on subtask status

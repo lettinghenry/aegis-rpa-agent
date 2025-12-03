@@ -116,90 +116,120 @@ class _LandingScreenState extends State<LandingScreen> {
         title: const Text('AEGIS RPA'),
         actions: [
           // History icon button
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'View History',
-            onPressed: _onHistoryTapped,
+          Semantics(
+            button: true,
+            label: 'View execution history',
+            hint: 'Tap to view past automation sessions',
+            child: IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'View History',
+              onPressed: _onHistoryTapped,
+            ),
           ),
         ],
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Title
-              Text(
-                'What would you like to automate?',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Subtitle
-              Text(
-                'Describe your task in natural language',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Text input field
-              TextField(
-                controller: _instructionController,
-                maxLines: 5,
-                minLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Example: Open Chrome, navigate to example.com, and take a screenshot',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+          child: Semantics(
+            label: 'Task input screen',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Title
+                Semantics(
+                  header: true,
+                  child: Text(
+                    'What would you like to automate?',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                  contentPadding: const EdgeInsets.all(16),
-                ),
-                style: theme.textTheme.bodyLarge,
-                enabled: !_isSubmitting,
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Error message display area
-              if (_errorMessage != null)
-                ErrorHandler.buildInlineError(
-                  context,
-                  _errorMessage!,
                 ),
               
-              if (_errorMessage != null) const SizedBox(height: 16),
-              
-              // Submit button with loading indicator
-              ButtonFeedback.buildPrimaryButton(
-                label: 'Start Automation',
-                onPressed: _isSubmitEnabled ? _onSubmit : null,
-                isLoading: _isSubmitting,
-                width: double.infinity,
-              ),
-              
-              const Spacer(),
-              
-              // Help text
-              Center(
-                child: Text(
-                  'Tip: Be specific about the applications and actions you want to automate',
-                  style: theme.textTheme.bodySmall?.copyWith(
+                const SizedBox(height: 8),
+                
+                // Subtitle
+                Text(
+                  'Describe your task in natural language',
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                
+                const SizedBox(height: 32),
+                
+                // Text input field
+                Semantics(
+                  textField: true,
+                  label: 'Task instruction input',
+                  hint: 'Enter the automation task you want to perform',
+                  child: TextField(
+                    controller: _instructionController,
+                    maxLines: 5,
+                    minLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Example: Open Chrome, navigate to example.com, and take a screenshot',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    style: theme.textTheme.bodyLarge,
+                    enabled: !_isSubmitting,
+                  ),
+                ),
+              
+                const SizedBox(height: 16),
+                
+                // Error message display area
+                if (_errorMessage != null)
+                  Semantics(
+                    liveRegion: true,
+                    label: 'Error: $_errorMessage',
+                    child: ErrorHandler.buildInlineError(
+                      context,
+                      _errorMessage!,
+                    ),
+                  ),
+                
+                if (_errorMessage != null) const SizedBox(height: 16),
+                
+                // Submit button with loading indicator
+                Semantics(
+                  button: true,
+                  label: _isSubmitting 
+                      ? 'Starting automation, please wait' 
+                      : 'Start automation',
+                  hint: _isSubmitEnabled 
+                      ? 'Tap to submit your task and begin automation' 
+                      : 'Enter a task instruction to enable this button',
+                  enabled: _isSubmitEnabled,
+                  child: ButtonFeedback.buildPrimaryButton(
+                    label: 'Start Automation',
+                    onPressed: _isSubmitEnabled ? _onSubmit : null,
+                    isLoading: _isSubmitting,
+                    width: double.infinity,
+                  ),
+                ),
+                
+                const Spacer(),
+                
+                // Help text
+                Center(
+                  child: Text(
+                    'Tip: Be specific about the applications and actions you want to automate',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

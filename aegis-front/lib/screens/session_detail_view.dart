@@ -126,9 +126,14 @@ class _SessionDetailViewState extends State<SessionDetailView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Session Details'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => AppRouter.navigateBack(context),
+        leading: Semantics(
+          button: true,
+          label: 'Back',
+          hint: 'Tap to go back to history',
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => AppRouter.navigateBack(context),
+          ),
         ),
       ),
       body: _buildBody(theme, colorScheme),
@@ -139,28 +144,39 @@ class _SessionDetailViewState extends State<SessionDetailView> {
   Widget _buildBody(ThemeData theme, ColorScheme colorScheme) {
     // Show loading indicator
     if (_isLoading) {
-      return LoadingIndicator.buildCentered(
-        context,
-        message: 'Loading session details...',
+      return Semantics(
+        liveRegion: true,
+        label: 'Loading session details',
+        child: LoadingIndicator.buildCentered(
+          context,
+          message: 'Loading session details...',
+        ),
       );
     }
 
     // Show error state with retry option
     if (_errorMessage != null) {
-      return ErrorHandler.buildFullScreenError(
-        context,
-        _errorMessage!,
-        onRetry: _loadSessionDetails,
+      return Semantics(
+        liveRegion: true,
+        label: 'Error loading session: $_errorMessage',
+        child: ErrorHandler.buildFullScreenError(
+          context,
+          _errorMessage!,
+          onRetry: _loadSessionDetails,
+        ),
       );
     }
 
     // Show session details
     if (_session == null) {
-      return Center(
-        child: Text(
-          'No session data available',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+      return Semantics(
+        label: 'No session data available',
+        child: Center(
+          child: Text(
+            'No session data available',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       );
@@ -188,59 +204,64 @@ class _SessionDetailViewState extends State<SessionDetailView> {
   /// 
   /// Validates: Requirements 6.5
   Widget _buildHeaderSection(ThemeData theme, ColorScheme colorScheme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 1.0,
+    return Semantics(
+      label: 'Session status: ${_getStatusText()}. Task instruction: ${_session!.instruction}',
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24.0),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          border: Border(
+            bottom: BorderSide(
+              color: colorScheme.outlineVariant,
+              width: 1.0,
+            ),
           ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Status badge
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 6.0,
-            ),
-            decoration: BoxDecoration(
-              color: _getStatusColor(colorScheme).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16.0),
-              border: Border.all(
-                color: _getStatusColor(colorScheme),
-                width: 1.5,
+        child: ExcludeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Status badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 6.0,
+                ),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(colorScheme).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16.0),
+                  border: Border.all(
+                    color: _getStatusColor(colorScheme),
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  _getStatusText(),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: _getStatusColor(colorScheme),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
-            child: Text(
-              _getStatusText(),
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: _getStatusColor(colorScheme),
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 16),
+              // Instruction
+              Text(
+                'Task Instruction',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                _session!.instruction,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          // Instruction
-          Text(
-            'Task Instruction',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _session!.instruction,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: colorScheme.onSurface,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -330,62 +351,70 @@ class _SessionDetailViewState extends State<SessionDetailView> {
   /// 
   /// Validates: Requirements 6.5
   Widget _buildSubtasksSection(ThemeData theme, ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Row(
-            children: [
-              Text(
-                'Subtasks',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
+    return Semantics(
+      label: 'Subtasks section. ${_session!.subtasks.length} subtask${_session!.subtasks.length != 1 ? 's' : ''}',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  Text(
+                    'Subtasks',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 2.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Text(
+                      '${_session!.subtasks.length}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 2.0,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Text(
-                  '${_session!.subtasks.length}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Display subtasks
+          if (_session!.subtasks.isEmpty)
+            Semantics(
+              label: 'No subtasks recorded',
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Center(
+                  child: Text(
+                    'No subtasks recorded',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Display subtasks
-        if (_session!.subtasks.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Center(
-              child: Text(
-                'No subtasks recorded',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+            )
+          else
+            ..._session!.subtasks.map(
+              (subtask) => SubtaskCard(
+                subtask: subtask,
               ),
             ),
-          )
-        else
-          ..._session!.subtasks.map(
-            (subtask) => SubtaskCard(
-              subtask: subtask,
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
