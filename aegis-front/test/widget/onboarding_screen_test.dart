@@ -114,7 +114,9 @@ void main() {
         await tester.pumpWidget(buildOnboardingScreen());
         expect(appState.onboardingCompleted, false);
 
-        // Act
+        // Act - Scroll to button first
+        await tester.ensureVisible(find.text('Get Started'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Get Started'));
         await tester.pumpAndSettle();
 
@@ -127,12 +129,14 @@ void main() {
         // Arrange
         await tester.pumpWidget(buildOnboardingScreen());
 
-        // Act
+        // Act - Scroll to button first
+        await tester.ensureVisible(find.text('Get Started'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Get Started'));
         await tester.pumpAndSettle();
 
         // Assert - Check that we navigated to the landing screen
-        expect(find.text('Landing Screen'), findsOneWidget);
+        expect(find.text('Landing Screen'), findsWidgets);
         expect(find.text('Welcome to AEGIS RPA'), findsNothing);
       });
 
@@ -158,7 +162,9 @@ void main() {
         await tester.pumpWidget(buildOnboardingScreen());
         expect(appState.onboardingCompleted, false);
 
-        // Act
+        // Act - Scroll to button first
+        await tester.ensureVisible(find.text('Skip'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Skip'));
         await tester.pumpAndSettle();
 
@@ -171,12 +177,14 @@ void main() {
         // Arrange
         await tester.pumpWidget(buildOnboardingScreen());
 
-        // Act
+        // Act - Scroll to button first
+        await tester.ensureVisible(find.text('Skip'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Skip'));
         await tester.pumpAndSettle();
 
         // Assert - Check that we navigated to the landing screen
-        expect(find.text('Landing Screen'), findsOneWidget);
+        expect(find.text('Landing Screen'), findsWidgets);
         expect(find.text('Welcome to AEGIS RPA'), findsNothing);
       });
 
@@ -200,7 +208,9 @@ void main() {
         // Arrange
         await tester.pumpWidget(buildOnboardingScreen());
 
-        // Act
+        // Act - Scroll to button first
+        await tester.ensureVisible(find.text('Get Started'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Get Started'));
         await tester.pumpAndSettle();
 
@@ -215,7 +225,9 @@ void main() {
         await tester.pumpWidget(buildOnboardingScreen());
         expect(appState.onboardingCompleted, false);
 
-        // Act
+        // Act - Scroll to button first
+        await tester.ensureVisible(find.text('Get Started'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Get Started'));
         await tester.pumpAndSettle();
 

@@ -694,7 +694,13 @@
   - Test with TalkBack/VoiceOver
   - _Requirements: 8.1_
 
-- [ ] 25. Checkpoint - Ensure all tests pass
+- [x] 25. Checkpoint - Ensure all tests pass
+
+
+
+
+
+
   - Run all unit tests
   - Run all widget tests
   - Run all property tests with 100 iterations

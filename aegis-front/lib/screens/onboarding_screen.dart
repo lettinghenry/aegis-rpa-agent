@@ -20,18 +20,19 @@ class OnboardingScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Semantics(
-            label: 'Onboarding screen',
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Hero image/animation
-                Expanded(
-                  flex: 2,
-                  child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Semantics(
+              label: 'Onboarding screen',
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 32),
+                  
+                  // Hero image/animation
+                  Center(
                     child: Semantics(
                       label: 'AEGIS robot icon',
                       image: true,
@@ -42,40 +43,37 @@ class OnboardingScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-              
-                const SizedBox(height: 32),
                 
-                // Title
-                Semantics(
-                  header: true,
-                  child: Text(
-                    'Welcome to AEGIS RPA',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                  const SizedBox(height: 32),
+                  
+                  // Title
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      'Welcome to AEGIS RPA',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Subtitle
+                  Text(
+                    'Your intelligent automation assistant',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
                 
-                const SizedBox(height: 16),
-                
-                // Subtitle
-                Text(
-                  'Your intelligent automation assistant',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              
-                const SizedBox(height: 48),
-                
-                // Feature highlights
-                Expanded(
-                  flex: 3,
-                  child: Semantics(
+                  const SizedBox(height: 48),
+                  
+                  // Feature highlights
+                  Semantics(
                     label: 'Features list',
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -106,48 +104,50 @@ class OnboardingScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
-              
-                const SizedBox(height: 32),
                 
-                // Get Started button
-                Semantics(
-                  button: true,
-                  label: 'Get started with AEGIS RPA',
-                  hint: 'Tap to complete onboarding and start using the app',
-                  child: FilledButton(
-                    onPressed: () => _handleGetStarted(context),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 32),
+                  
+                  // Get Started button
+                  Semantics(
+                    button: true,
+                    label: 'Get started with AEGIS RPA',
+                    hint: 'Tap to complete onboarding and start using the app',
+                    child: FilledButton(
+                      onPressed: () => _handleGetStarted(context),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(56),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Get Started',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Skip option
-                Semantics(
-                  button: true,
-                  label: 'Skip onboarding',
-                  hint: 'Tap to skip onboarding and go directly to the app',
-                  child: TextButton(
-                    onPressed: () => _handleGetStarted(context),
-                    child: Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
+                      child: const Text(
+                        'Get Started',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Skip option
+                  Semantics(
+                    button: true,
+                    label: 'Skip onboarding',
+                    hint: 'Tap to skip onboarding and go directly to the app',
+                    child: TextButton(
+                      onPressed: () => _handleGetStarted(context),
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
