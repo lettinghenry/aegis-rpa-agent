@@ -96,56 +96,72 @@ class SessionSummaryCard extends StatelessWidget {
     );
   }
 
-  /// Build status badge with appropriate color
+  /// Build status badge with appropriate color and icon
   Widget _buildStatusBadge(ThemeData theme, ColorScheme colorScheme) {
-    final statusColor = _getStatusColor();
-    final statusText = _getStatusText();
+    final statusInfo = _getStatusInfo();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.15),
+        color: statusInfo.color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(16.0),
       ),
-      child: Text(
-        statusText,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: statusColor,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            statusInfo.icon,
+            size: 16.0,
+            color: statusInfo.color,
+          ),
+          const SizedBox(width: 6.0),
+          Text(
+            statusInfo.label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: statusInfo.color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  /// Get status color based on session status
-  Color _getStatusColor() {
-    switch (session.status.toLowerCase()) {
-      case 'completed':
-        return const Color(0xFF4CAF50); // Green
-      case 'failed':
-        return const Color(0xFFF44336); // Red
-      case 'cancelled':
-        return const Color(0xFFFF9800); // Orange
-      case 'in_progress':
-        return const Color(0xFF2196F3); // Blue
-      default:
-        return Colors.grey;
-    }
-  }
+  /// Get status information (color, icon, label) based on session status
+  _StatusInfo _getStatusInfo() {
+    final status = session.status.toLowerCase();
 
-  /// Get status text for display
-  String _getStatusText() {
-    switch (session.status.toLowerCase()) {
+    switch (status) {
       case 'completed':
-        return 'Completed';
+        return _StatusInfo(
+          color: const Color(0xFF4CAF50), // Green
+          icon: Icons.check_circle,
+          label: 'Completed',
+        );
       case 'failed':
-        return 'Failed';
+        return _StatusInfo(
+          color: const Color(0xFFF44336), // Red
+          icon: Icons.error,
+          label: 'Failed',
+        );
       case 'cancelled':
-        return 'Cancelled';
+        return _StatusInfo(
+          color: const Color(0xFF9E9E9E), // Grey
+          icon: Icons.cancel,
+          label: 'Cancelled',
+        );
       case 'in_progress':
-        return 'In Progress';
+        return _StatusInfo(
+          color: const Color(0xFF2196F3), // Blue
+          icon: Icons.pending,
+          label: 'In Progress',
+        );
       default:
-        return session.status;
+        return _StatusInfo(
+          color: Colors.grey,
+          icon: Icons.help_outline,
+          label: status,
+        );
     }
   }
 
@@ -175,4 +191,17 @@ class SessionSummaryCard extends StatelessWidget {
       return DateFormat('MMM d, yyyy').format(timestamp);
     }
   }
+}
+
+/// Helper class to hold status information
+class _StatusInfo {
+  final Color color;
+  final IconData icon;
+  final String label;
+
+  _StatusInfo({
+    required this.color,
+    required this.icon,
+    required this.label,
+  });
 }
