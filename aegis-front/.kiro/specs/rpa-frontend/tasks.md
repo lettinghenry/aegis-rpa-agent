@@ -110,7 +110,13 @@
   - Test request serialization and response deserialization
   - _Requirements: 2.3, 7.1_
 
-- [ ]* 4.2 Write property test for API requests
+- [x] 4.2 Write property test for API requests
+
+
+
+
+
+
   - **Property 3: Task Submission Request**
   - **Property 18: Cancellation Request**
   - **Property 21: History Request**
@@ -377,7 +383,13 @@
   - Switch between normal and minimal layouts based on window mode state
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 13.2_
 
-- [ ]* 11.1 Write widget tests for task execution screen
+- [x] 11.1 Write widget tests for task execution screen
+
+
+
+
+
+
   - Test UI elements presence
   - Test subtask card display
   - Test status indicators
