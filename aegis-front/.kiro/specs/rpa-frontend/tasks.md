@@ -415,7 +415,13 @@
   - Test visual styling
   - _Requirements: 3.3, 3.4, 3.5_
 
-- [ ]* 12.2 Write property test for subtask card visual treatment
+- [x] 12.2 Write property test for subtask card visual treatment
+
+
+
+
+
+
   - **Property 42: In-Progress Subtask Highlighting**
   - **Property 43: Completed Subtask Visual Treatment**
   - **Property 44: Failed Subtask Error Display**
