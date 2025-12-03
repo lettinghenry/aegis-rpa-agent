@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../routes/app_router.dart';
+import '../utils/button_feedback.dart';
 
 /// Onboarding screen shown to first-time users.
 /// 

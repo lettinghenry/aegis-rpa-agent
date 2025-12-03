@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../state/history_state.dart';
 import '../widgets/session_summary_card.dart';
 import '../routes/app_router.dart';
+import '../utils/error_handler.dart';
+import '../utils/loading_indicator.dart';
+import '../utils/button_feedback.dart';
 
 /// History view screen that displays past execution sessions
 /// 
@@ -73,63 +76,19 @@ class _HistoryViewState extends State<HistoryView> {
         builder: (context, historyState, child) {
           // Show loading indicator on initial load
           if (historyState.isLoading && historyState.sessions.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Loading history...',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+            return LoadingIndicator.buildCentered(
+              context,
+              message: 'Loading history...',
             );
           }
 
           // Show error state with retry option
           if (historyState.errorMessage != null &&
               historyState.sessions.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load history',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      historyState.errorMessage!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: _loadHistory,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
+            return ErrorHandler.buildFullScreenError(
+              context,
+              historyState.errorMessage!,
+              onRetry: _loadHistory,
             );
           }
 

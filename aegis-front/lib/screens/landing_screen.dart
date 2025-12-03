@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/execution_state.dart';
 import '../routes/app_router.dart';
+import '../utils/error_handler.dart';
+import '../utils/button_feedback.dart';
 
 /// Landing screen where users input task instructions.
 /// 
@@ -84,7 +86,7 @@ class _LandingScreenState extends State<LandingScreen> {
     } catch (e) {
       // Display error without navigating
       setState(() {
-        _errorMessage = _formatErrorMessage(e);
+        _errorMessage = ErrorHandler.formatErrorMessage(e);
       });
     } finally {
       if (mounted) {
@@ -95,27 +97,7 @@ class _LandingScreenState extends State<LandingScreen> {
     }
   }
 
-  /// Format error message for user display
-  /// 
-  /// Validates: Requirements 7.1, 7.4
-  String _formatErrorMessage(dynamic error) {
-    final errorStr = error.toString();
-    
-    if (errorStr.contains('SocketException') ||
-        errorStr.contains('Connection refused') ||
-        errorStr.contains('Failed host lookup')) {
-      return 'Unable to connect. Please check your internet connection.';
-    } else if (errorStr.contains('TimeoutException')) {
-      return 'Request timed out. Please try again.';
-    } else if (errorStr.contains('offline') || errorStr.contains('unreachable')) {
-      return 'The automation service is currently offline. Please try again later.';
-    } else if (errorStr.contains('ValidationException')) {
-      // Extract validation message if available
-      return errorStr.replaceAll('ValidationException:', '').trim();
-    } else {
-      return 'Something went wrong. Please try again.';
-    }
-  }
+
 
   /// Navigate to history view
   /// 
@@ -190,61 +172,19 @@ class _LandingScreenState extends State<LandingScreen> {
               
               // Error message display area
               if (_errorMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: colorScheme.onErrorContainer,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onErrorContainer,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                ErrorHandler.buildInlineError(
+                  context,
+                  _errorMessage!,
                 ),
               
               if (_errorMessage != null) const SizedBox(height: 16),
               
               // Submit button with loading indicator
-              FilledButton(
+              ButtonFeedback.buildPrimaryButton(
+                label: 'Start Automation',
                 onPressed: _isSubmitEnabled ? _onSubmit : null,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isSubmitting
-                    ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            colorScheme.onPrimary,
-                          ),
-                        ),
-                      )
-                    : const Text(
-                        'Start Automation',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                isLoading: _isSubmitting,
+                width: double.infinity,
               ),
               
               const Spacer(),

@@ -4,6 +4,8 @@ import '../models/execution_session.dart';
 import '../services/backend_api_service.dart';
 import '../widgets/subtask_card.dart';
 import '../routes/app_router.dart';
+import '../utils/error_handler.dart';
+import '../utils/loading_indicator.dart';
 import 'package:intl/intl.dart';
 
 /// Session detail view screen that displays complete details of a past execution session
@@ -137,62 +139,18 @@ class _SessionDetailViewState extends State<SessionDetailView> {
   Widget _buildBody(ThemeData theme, ColorScheme colorScheme) {
     // Show loading indicator
     if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              color: colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Loading session details...',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+      return LoadingIndicator.buildCentered(
+        context,
+        message: 'Loading session details...',
       );
     }
 
     // Show error state with retry option
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load session',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _errorMessage!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: _loadSessionDetails,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+      return ErrorHandler.buildFullScreenError(
+        context,
+        _errorMessage!,
+        onRetry: _loadSessionDetails,
       );
     }
 

@@ -4,6 +4,8 @@ import '../models/execution_session.dart';
 import '../models/subtask.dart';
 import '../state/execution_state.dart';
 import '../routes/app_router.dart';
+import '../utils/error_handler.dart';
+import '../utils/button_feedback.dart';
 
 /// Task Execution Screen displays real-time progress of automation execution
 /// 
@@ -407,13 +409,12 @@ class TaskExecutionScreen extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      child: FilledButton.icon(
+      child: ButtonFeedback.buildPrimaryButton(
+        label: buttonText,
+        icon: buttonIcon,
         onPressed: () => AppRouter.navigateBack(context),
-        icon: Icon(buttonIcon),
-        label: Text(buttonText),
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(double.infinity, 48),
-        ),
+        width: double.infinity,
+        height: 48,
       ),
     );
   }
@@ -454,12 +455,7 @@ class TaskExecutionScreen extends StatelessWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to cancel execution: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ErrorHandler.showErrorSnackBar(context, e);
         }
       }
     }
