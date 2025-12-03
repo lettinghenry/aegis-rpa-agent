@@ -240,7 +240,12 @@
   - Mock services
   - _Requirements: 2.3, 3.1, 5.3_
 
-- [-] 7.2 Write property test for execution state
+- [x] 7.2 Write property test for execution state
+
+
+
+
+
 
 
 
@@ -287,7 +292,21 @@
   - Mock API service
   - _Requirements: 6.2_
 
-- [ ]* 8.2 Write property test for history display
+- [x] 8.2 Write property test for history display
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   - **Property 22: History Display**
   - **Validates: Requirements 6.3**
 
@@ -516,13 +535,25 @@
   - Load session details on screen init
   - _Requirements: 6.4, 6.5_
 
-- [ ]* 15.1 Write widget tests for session detail view
+- [x] 15.1 Write widget tests for session detail view
+
+
+
+
+
+
   - Test UI elements presence
   - Test session details display
   - Test subtask list display
   - _Requirements: 6.5_
 
-- [ ]* 15.2 Write property test for session detail display
+- [x] 15.2 Write property test for session detail display
+
+
+
+
+
+
   - **Property 24: Session Detail Display**
   - **Validates: Requirements 6.5**
 

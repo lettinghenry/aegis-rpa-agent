@@ -385,7 +385,7 @@ void main() {
       }
     });
 
-    test('Property 19: Cancellation cleanup with window restoration', () {
+    test('Property 19: Cancellation cleanup with window restoration', () async {
       // Additional test focusing on window restoration during cancellation
       // This ensures that regardless of window state, cancellation always cleans up properly
       
@@ -407,34 +407,34 @@ void main() {
           message: 'Task started',
         );
 
-        executionState.startExecution(randomInstruction()).then((_) {
-          // Always enter minimal mode for this test
-          final minimalUpdate = StatusUpdate(
-            sessionId: sessionId,
-            overallStatus: 'in_progress',
-            message: 'Starting RPA action',
-            windowState: 'minimal',
-            timestamp: DateTime.now(),
-          );
-          executionState.onStatusUpdate(minimalUpdate);
-          
-          final wasInMinimalMode = executionState.isMinimalMode;
-          expect(wasInMinimalMode, isTrue);
+        await executionState.startExecution(randomInstruction());
+        
+        // Always enter minimal mode for this test
+        final minimalUpdate = StatusUpdate(
+          sessionId: sessionId,
+          overallStatus: 'in_progress',
+          message: 'Starting RPA action',
+          windowState: 'minimal',
+          timestamp: DateTime.now(),
+        );
+        executionState.onStatusUpdate(minimalUpdate);
+        
+        final wasInMinimalMode = executionState.isMinimalMode;
+        expect(wasInMinimalMode, isTrue);
 
-          // Cancel execution
-          executionState.cancelExecution().then((_) {
-            // Verify cleanup happened
-            expect(mockWsService.disconnectCalled, isTrue);
-            expect(executionState.isConnected, isFalse);
-            
-            // Verify window was restored
-            expect(mockWindowService.exitMinimalModeCalled, isTrue,
-                reason: 'Window must always be restored on cancellation if in minimal mode');
-            
-            expect(executionState.isMinimalMode, isFalse,
-                reason: 'Window must be in normal mode after cancellation');
-          });
-        });
+        // Cancel execution
+        await executionState.cancelExecution();
+        
+        // Verify cleanup happened
+        expect(mockWsService.disconnectCalled, isTrue);
+        expect(executionState.isConnected, isFalse);
+        
+        // Verify window was restored
+        expect(mockWindowService.exitMinimalModeCalled, isTrue,
+            reason: 'Window must always be restored on cancellation if in minimal mode');
+        
+        expect(executionState.isMinimalMode, isFalse,
+            reason: 'Window must be in normal mode after cancellation');
 
         executionState.dispose();
         mockWsService.reset();
@@ -442,7 +442,7 @@ void main() {
       }
     });
 
-    test('Property 6: WebSocket connection with various instructions', () {
+    test('Property 6: WebSocket connection with various instructions', () async {
       // Test that WebSocket connection is established regardless of instruction content
       
       for (int i = 0; i < 100; i++) {
@@ -475,17 +475,17 @@ void main() {
           message: 'Task started',
         );
 
-        executionState.startExecution(instruction).then((_) {
-          // Verify WebSocket connection regardless of instruction
-          expect(mockWsService.connectCalled, isTrue,
-              reason: 'WebSocket must connect for any valid instruction');
-          
-          expect(mockWsService.connectedSessionId, equals(sessionId),
-              reason: 'Session ID must match for any instruction');
-          
-          expect(executionState.isConnected, isTrue,
-              reason: 'Connection state must be tracked for any instruction');
-        });
+        await executionState.startExecution(instruction);
+        
+        // Verify WebSocket connection regardless of instruction
+        expect(mockWsService.connectCalled, isTrue,
+            reason: 'WebSocket must connect for any valid instruction');
+        
+        expect(mockWsService.connectedSessionId, equals(sessionId),
+            reason: 'Session ID must match for any instruction');
+        
+        expect(executionState.isConnected, isTrue,
+            reason: 'Connection state must be tracked for any instruction');
 
         executionState.dispose();
         mockWsService.reset();
@@ -493,7 +493,7 @@ void main() {
       }
     });
 
-    test('Property 7: Subtask addition preserves order', () {
+    test('Property 7: Subtask addition preserves order', () async {
       // Test that subtasks are added in the order they are received
       
       for (int i = 0; i < 100; i++) {
@@ -514,37 +514,37 @@ void main() {
           message: 'Task started',
         );
 
-        executionState.startExecution(randomInstruction()).then((_) {
-          // Generate ordered subtasks
-          final numSubtasks = random.nextInt(10) + 1;
-          final subtaskIds = List.generate(numSubtasks, (j) => 'subtask-$j');
+        await executionState.startExecution(randomInstruction());
+        
+        // Generate ordered subtasks
+        final numSubtasks = random.nextInt(10) + 1;
+        final subtaskIds = List.generate(numSubtasks, (j) => 'subtask-$j');
 
-          // Send updates in order
-          for (int j = 0; j < numSubtasks; j++) {
-            final subtask = Subtask(
-              id: subtaskIds[j],
-              description: 'Subtask ${j + 1}',
-              status: SubtaskStatus.inProgress,
-              timestamp: DateTime.now().add(Duration(milliseconds: j)),
-            );
+        // Send updates in order
+        for (int j = 0; j < numSubtasks; j++) {
+          final subtask = Subtask(
+            id: subtaskIds[j],
+            description: 'Subtask ${j + 1}',
+            status: SubtaskStatus.inProgress,
+            timestamp: DateTime.now().add(Duration(milliseconds: j)),
+          );
 
-            final update = StatusUpdate(
-              sessionId: sessionId,
-              subtask: subtask,
-              overallStatus: 'in_progress',
-              message: 'Processing',
-              timestamp: DateTime.now(),
-            );
+          final update = StatusUpdate(
+            sessionId: sessionId,
+            subtask: subtask,
+            overallStatus: 'in_progress',
+            message: 'Processing',
+            timestamp: DateTime.now(),
+          );
 
-            executionState.onStatusUpdate(update);
-          }
+          executionState.onStatusUpdate(update);
+        }
 
-          // Verify order is preserved
-          for (int j = 0; j < numSubtasks; j++) {
-            expect(executionState.subtasks[j].id, equals(subtaskIds[j]),
-                reason: 'Subtasks must be added in the order received');
-          }
-        });
+        // Verify order is preserved
+        for (int j = 0; j < numSubtasks; j++) {
+          expect(executionState.subtasks[j].id, equals(subtaskIds[j]),
+              reason: 'Subtasks must be added in the order received');
+        }
 
         executionState.dispose();
         mockWsService.reset();
