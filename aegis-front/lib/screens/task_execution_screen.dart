@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/execution_session.dart';
 import '../models/subtask.dart';
 import '../state/execution_state.dart';
+import '../routes/app_router.dart';
 
 /// Task Execution Screen displays real-time progress of automation execution
 /// 
@@ -394,6 +395,8 @@ class TaskExecutionScreen extends StatelessWidget {
   }
 
   /// Build completion button (Done/Back)
+  /// 
+  /// Validates: Requirements 4.5
   Widget _buildCompletionButton(
     BuildContext context,
     ExecutionStateNotifier executionState,
@@ -405,7 +408,7 @@ class TaskExecutionScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       child: FilledButton.icon(
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () => AppRouter.navigateBack(context),
         icon: Icon(buttonIcon),
         label: Text(buttonText),
         style: FilledButton.styleFrom(
@@ -416,6 +419,8 @@ class TaskExecutionScreen extends StatelessWidget {
   }
 
   /// Show cancel confirmation dialog
+  /// 
+  /// Validates: Requirements 5.2, 5.3, 5.4
   Future<void> _showCancelDialog(
     BuildContext context,
     ExecutionStateNotifier executionState,
@@ -445,7 +450,7 @@ class TaskExecutionScreen extends StatelessWidget {
       try {
         await executionState.cancelExecution();
         if (context.mounted) {
-          Navigator.of(context).pop();
+          await AppRouter.navigateBackToLanding(context);
         }
       } catch (e) {
         if (context.mounted) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/execution_state.dart';
+import '../routes/app_router.dart';
 
 /// Landing screen where users input task instructions.
 /// 
@@ -75,9 +76,9 @@ class _LandingScreenState extends State<LandingScreen> {
 
       // Navigate to Task Execution Screen on success
       if (mounted) {
-        Navigator.of(context).pushNamed(
-          '/execution',
-          arguments: executionState.sessionId,
+        await AppRouter.navigateToExecution(
+          context,
+          sessionId: executionState.sessionId,
         );
       }
     } catch (e) {
@@ -120,7 +121,7 @@ class _LandingScreenState extends State<LandingScreen> {
   /// 
   /// Validates: Requirements 6.1
   void _onHistoryTapped() {
-    Navigator.of(context).pushNamed('/history');
+    AppRouter.navigateToHistory(context);
   }
 
   @override

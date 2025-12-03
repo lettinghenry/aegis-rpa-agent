@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
+import '../routes/app_router.dart';
 
 /// Onboarding screen shown to first-time users.
 /// 
@@ -133,19 +134,17 @@ class OnboardingScreen extends StatelessWidget {
   /// Handles the "Get Started" or "Skip" button press.
   /// 
   /// Marks onboarding as complete and navigates to the landing screen.
+  /// 
+  /// Validates: Requirements 1.4
   void _handleGetStarted(BuildContext context) async {
     final appState = Provider.of<AppState>(context, listen: false);
     
     // Mark onboarding as completed
     await appState.completeOnboarding();
     
-    // Navigate to landing screen
-    // Note: Navigation will be handled by the router based on onboarding status
-    // For now, we'll use a simple replacement navigation
+    // Navigate to landing screen using router
     if (context.mounted) {
-      // The main.dart will handle routing based on onboarding status
-      // This is a placeholder - actual navigation will be implemented in task 17
-      Navigator.of(context).pushReplacementNamed('/landing');
+      await AppRouter.navigateToLanding(context);
     }
   }
 }

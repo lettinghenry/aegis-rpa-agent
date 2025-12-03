@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/history_state.dart';
 import '../widgets/session_summary_card.dart';
-import 'session_detail_view.dart';
+import '../routes/app_router.dart';
 
 /// History view screen that displays past execution sessions
 /// 
@@ -53,11 +53,7 @@ class _HistoryViewState extends State<HistoryView> {
   /// 
   /// Validates: Requirements 6.4
   void _onSessionTapped(String sessionId) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => SessionDetailView(sessionId: sessionId),
-      ),
-    );
+    AppRouter.navigateToSessionDetail(context, sessionId);
   }
 
   @override
@@ -70,7 +66,7 @@ class _HistoryViewState extends State<HistoryView> {
         title: const Text('Execution History'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => AppRouter.navigateBack(context),
         ),
       ),
       body: Consumer<HistoryStateNotifier>(

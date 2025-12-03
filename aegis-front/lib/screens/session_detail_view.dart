@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/execution_session.dart';
 import '../services/backend_api_service.dart';
 import '../widgets/subtask_card.dart';
+import '../routes/app_router.dart';
 import 'package:intl/intl.dart';
 
 /// Session detail view screen that displays complete details of a past execution session
@@ -125,7 +126,7 @@ class _SessionDetailViewState extends State<SessionDetailView> {
         title: const Text('Session Details'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => AppRouter.navigateBack(context),
         ),
       ),
       body: _buildBody(theme, colorScheme),
