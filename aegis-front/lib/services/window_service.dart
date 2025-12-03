@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:window_manager/window_manager.dart';
+import '../config/app_config.dart';
 
 /// Service for managing window state transitions during RPA execution.
 /// 
@@ -12,12 +13,6 @@ class WindowService {
 
   /// Whether the window is currently in minimal mode
   bool get isMinimalMode => _isMinimalMode;
-
-  /// Configuration for minimal window mode
-  static const Size minimalSize = Size(300, 100);
-  static const Duration transitionDuration = Duration(milliseconds: 250);
-  static const double minimalOffsetX = 20; // From right edge
-  static const double minimalOffsetY = 20; // From top
 
   /// Enter minimal mode: resize window to small floating panel
   /// 
@@ -36,9 +31,10 @@ class WindowService {
       final screenSize = await _getScreenSize();
 
       // Calculate position (top-right corner with offset)
+      final minimalSize = Size(WindowConfig.minimalWidth, WindowConfig.minimalHeight);
       final newPosition = Offset(
-        screenSize.width - minimalSize.width - minimalOffsetX,
-        minimalOffsetY,
+        screenSize.width - WindowConfig.minimalWidth - WindowConfig.minimalOffsetX,
+        WindowConfig.minimalOffsetY,
       );
 
       // Enter minimal mode with smooth transition

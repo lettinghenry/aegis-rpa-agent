@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:aegis_front/services/window_service.dart';
+import 'package:aegis_front/config/app_config.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -199,10 +200,12 @@ void main() {
 
       test('constants have expected values', () {
         // Assert - Verify configuration constants match requirements
-        expect(WindowService.minimalSize, const Size(300, 100));
-        expect(WindowService.transitionDuration, const Duration(milliseconds: 250));
-        expect(WindowService.minimalOffsetX, 20);
-        expect(WindowService.minimalOffsetY, 20);
+        // These are now in WindowConfig
+        expect(WindowConfig.minimalWidth, 300.0);
+        expect(WindowConfig.minimalHeight, 100.0);
+        expect(WindowConfig.transitionDuration, const Duration(milliseconds: 250));
+        expect(WindowConfig.minimalOffsetX, 20.0);
+        expect(WindowConfig.minimalOffsetY, 20.0);
       });
 
       test('service can be instantiated multiple times', () {
