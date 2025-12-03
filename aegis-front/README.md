@@ -308,8 +308,15 @@ git push origin feature/your-feature-name
    - Example: "Check my Outlook inbox and download any PDFs"
 2. **Submit**: Tap the submit button
 3. **Monitor Progress**: Watch real-time execution progress with subtask updates
-4. **Minimal Mode**: The window automatically minimizes to a small floating panel during RPA execution, giving the automation agent full desktop access
+4. **Minimal Mode**: ✨ The window automatically minimizes to a small floating panel (300x100) during RPA execution, giving the automation agent full desktop access
 5. **Completion**: The window automatically restores to normal size when execution completes
+
+**Window Management Features:**
+- Automatic transition to minimal mode when RPA actions begin
+- Always-on-top floating panel shows current subtask
+- Smooth animations (250ms transitions)
+- Automatic restoration on completion, cancellation, or error
+- Saves and restores original window size and position
 
 ### Viewing History
 
@@ -473,8 +480,34 @@ For issues and questions:
 - Contact the development team
 - Check the documentation in `.kiro/specs/`
 
-## Roadmap
+## Implementation Status
 
+### Completed Features ✅
+- ✅ Project structure and dependencies
+- ✅ Data models with JSON serialization
+- ✅ Storage service for onboarding persistence
+- ✅ Backend API service (HTTP client)
+- ✅ WebSocket service with reconnection logic
+- ✅ Window management service for minimal mode
+- ✅ State management (App, Execution, History states)
+- ✅ Onboarding screen
+- ✅ Landing screen with task input
+- ✅ Task execution screen with real-time updates
+- ✅ Subtask cards with status indicators
+- ✅ History view with session list
+- ✅ Comprehensive unit and widget tests
+- ✅ Property-based tests for critical invariants
+
+### In Progress 🚧
+- Session summary cards
+- Session detail view
+- Material 3 theme implementation
+- Navigation and routing
+- Error handling and user feedback
+- WebSocket lifecycle management
+- Configuration and environment setup
+
+### Roadmap 📋
 - [ ] Offline mode with cached sessions
 - [ ] Voice input for task instructions
 - [ ] Favorites for frequently used instructions

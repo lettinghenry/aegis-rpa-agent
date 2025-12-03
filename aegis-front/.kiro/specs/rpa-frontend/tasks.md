@@ -442,7 +442,13 @@
   - Implement onSessionTapped() to navigate to Session Detail View
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ]* 13.1 Write widget tests for history view
+- [x] 13.1 Write widget tests for history view
+
+
+
+
+
+
   - Test UI elements presence
   - Test session list display
   - Test pull-to-refresh
