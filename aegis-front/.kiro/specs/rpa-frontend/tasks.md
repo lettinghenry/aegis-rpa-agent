@@ -471,7 +471,13 @@
   - Use Material 3 Card styling
   - _Requirements: 6.3_
 
-- [ ]* 14.1 Write widget tests for session summary card
+- [x] 14.1 Write widget tests for session summary card
+
+
+
+
+
+
   - Test card display
   - Test status badge colors
   - Test tap handling
