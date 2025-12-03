@@ -165,7 +165,9 @@ class TaskExecutionScreen extends StatelessWidget {
     );
   }
 
-  /// Build overall status indicator
+  /// Build overall status indicator with connection status
+  /// 
+  /// Validates: Requirements 7.2, 7.3, 9.3
   Widget _buildStatusIndicator(
     BuildContext context,
     ExecutionStateNotifier executionState,
@@ -227,6 +229,75 @@ class TaskExecutionScreen extends StatelessWidget {
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 color: statusColor,
+              ),
+            ),
+          ],
+          const Spacer(),
+          // Connection status indicator
+          _buildConnectionStatusIndicator(context, executionState),
+        ],
+      ),
+    );
+  }
+
+  /// Build connection status indicator
+  /// 
+  /// Shows WebSocket connection state with appropriate icon and color.
+  /// Validates: Requirements 7.2, 7.3
+  Widget _buildConnectionStatusIndicator(
+    BuildContext context,
+    ExecutionStateNotifier executionState,
+  ) {
+    final connectionStatus = executionState.connectionStatus;
+    final theme = Theme.of(context);
+
+    IconData icon;
+    Color color;
+    String tooltip;
+
+    switch (connectionStatus) {
+      case ConnectionStatus.disconnected:
+        icon = Icons.cloud_off;
+        color = Colors.grey;
+        tooltip = 'Disconnected';
+        break;
+      case ConnectionStatus.connecting:
+        icon = Icons.cloud_sync;
+        color = Colors.orange;
+        tooltip = 'Connecting...';
+        break;
+      case ConnectionStatus.connected:
+        icon = Icons.cloud_done;
+        color = const Color(0xFF4CAF50); // Green
+        tooltip = 'Connected';
+        break;
+      case ConnectionStatus.reconnecting:
+        icon = Icons.cloud_sync;
+        color = Colors.orange;
+        tooltip = 'Reconnecting...';
+        break;
+      case ConnectionStatus.failed:
+        icon = Icons.cloud_off;
+        color = const Color(0xFFF44336); // Red
+        tooltip = 'Connection Failed';
+        break;
+    }
+
+    return Tooltip(
+      message: tooltip,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 20),
+          if (connectionStatus == ConnectionStatus.connecting ||
+              connectionStatus == ConnectionStatus.reconnecting) ...[
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: color,
               ),
             ),
           ],

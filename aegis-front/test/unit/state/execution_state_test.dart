@@ -8,6 +8,9 @@ import 'package:aegis_front/services/backend_api_service.dart';
 import 'package:aegis_front/services/websocket_service.dart';
 import 'package:aegis_front/services/window_service.dart';
 
+// Import ConnectionStatus enum
+export 'package:aegis_front/state/execution_state.dart' show ConnectionStatus;
+
 // Mock classes for services
 class MockBackendApiService implements BackendApiService {
   TaskInstructionResponse? mockStartTaskResponse;
@@ -42,6 +45,10 @@ class MockWebSocketService implements WebSocketService {
   Function(StatusUpdate)? onUpdateCallback;
   Function(dynamic)? onErrorCallback;
   Function()? onDoneCallback;
+  bool _isConnected = false;
+
+  @override
+  bool get isConnected => _isConnected;
 
   @override
   Future<void> connect(
@@ -55,11 +62,13 @@ class MockWebSocketService implements WebSocketService {
     onUpdateCallback = onUpdate;
     onErrorCallback = onError;
     onDoneCallback = onDone;
+    _isConnected = true;
   }
 
   @override
   Future<void> disconnect() async {
     disconnectCalled = true;
+    _isConnected = false;
   }
 
   void simulateUpdate(StatusUpdate update) {
@@ -67,10 +76,12 @@ class MockWebSocketService implements WebSocketService {
   }
 
   void simulateError(dynamic error) {
+    _isConnected = false;
     onErrorCallback?.call(error);
   }
 
   void simulateDone() {
+    _isConnected = false;
     onDoneCallback?.call();
   }
 
@@ -802,7 +813,9 @@ void main() {
 
         // Assert
         expect(executionState.isConnected, false);
-        expect(executionState.errorMessage, contains('Connection error'));
+        // Error message is only set if connection status is failed (not reconnecting)
+        // Since the session is still in progress, it will try to reconnect
+        expect(executionState.connectionStatus, ConnectionStatus.reconnecting);
       });
 
       test('handles WebSocket done', () {
@@ -822,8 +835,9 @@ void main() {
 
         // Assert
         expect(executionState.isConnected, false);
-        expect(executionState.isMinimalMode, false);
-        expect(mockWindowService.exitMinimalModeCalled, true);
+        // Window should remain in minimal mode during active execution
+        // It will be restored when execution completes
+        expect(executionState.isMinimalMode, true);
       });
 
       test('notifies listeners on WebSocket error', () {
