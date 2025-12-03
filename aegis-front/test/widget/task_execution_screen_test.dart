@@ -191,7 +191,8 @@ void main() {
       testWidgets('displays cancel button during active execution',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(
+          tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -208,7 +209,7 @@ void main() {
       testWidgets('does not display cancel button when completed',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.completed,
@@ -223,7 +224,7 @@ void main() {
 
       testWidgets('displays instruction card', (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Open Chrome and navigate to example.com',
           status: SessionStatus.inProgress,
@@ -240,7 +241,7 @@ void main() {
       testWidgets('displays overall status indicator',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -257,7 +258,7 @@ void main() {
       testWidgets('displays connection status indicator',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -274,7 +275,7 @@ void main() {
       testWidgets('displays empty state when no subtasks',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -291,7 +292,7 @@ void main() {
       testWidgets('displays Done button when completed successfully',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.completed,
@@ -308,7 +309,7 @@ void main() {
       testWidgets('displays Back button when failed',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.failed,
@@ -341,7 +342,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -379,7 +380,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -420,7 +421,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -453,7 +454,7 @@ void main() {
       testWidgets('displays pending status correctly',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.pending,
@@ -470,7 +471,7 @@ void main() {
       testWidgets('displays in-progress status correctly',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -487,7 +488,7 @@ void main() {
       testWidgets('displays completed status correctly',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.completed,
@@ -504,7 +505,7 @@ void main() {
       testWidgets('displays failed status correctly',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.failed,
@@ -521,7 +522,7 @@ void main() {
       testWidgets('displays cancelled status correctly',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.cancelled,
@@ -547,7 +548,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -573,7 +574,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -600,7 +601,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -618,7 +619,7 @@ void main() {
       testWidgets('displays connection status - connected',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -635,7 +636,7 @@ void main() {
       testWidgets('displays connection status - disconnected',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -652,7 +653,7 @@ void main() {
       testWidgets('displays connection status - reconnecting',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -671,7 +672,7 @@ void main() {
       testWidgets('tapping cancel button shows confirmation dialog',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -699,7 +700,7 @@ void main() {
       testWidgets('tapping No in dialog dismisses it without cancelling',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -722,7 +723,7 @@ void main() {
       testWidgets('tapping Yes in dialog cancels execution',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -743,7 +744,7 @@ void main() {
       testWidgets('cancel button is not shown when execution is complete',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.completed,
@@ -759,7 +760,7 @@ void main() {
       testWidgets('cancel button is not shown when execution failed',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.failed,
@@ -777,7 +778,7 @@ void main() {
       testWidgets('displays Done button when execution completes successfully',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.completed,
@@ -794,7 +795,7 @@ void main() {
       testWidgets('displays Back button when execution fails',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.failed,
@@ -811,7 +812,7 @@ void main() {
       testWidgets('displays Back button when execution is cancelled',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.cancelled,
@@ -827,7 +828,7 @@ void main() {
       testWidgets('tapping Done button navigates back',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.completed,
@@ -848,7 +849,7 @@ void main() {
       testWidgets('tapping Back button navigates back',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.failed,
@@ -867,7 +868,7 @@ void main() {
       testWidgets('does not display completion button during execution',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -884,7 +885,7 @@ void main() {
       testWidgets('displays success status with completed button',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.completed,
@@ -902,7 +903,7 @@ void main() {
       testWidgets('displays failed status with back button',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.failed,
@@ -931,7 +932,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -952,7 +953,7 @@ void main() {
       testWidgets('displays normal mode UI when isMinimalMode is false',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -979,7 +980,7 @@ void main() {
           ),
         ];
 
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -997,7 +998,7 @@ void main() {
       testWidgets('minimal mode shows progress indicator',
           (WidgetTester tester) async {
         // Arrange
-        setupExecutionState(
+        await setupExecutionState(tester,
           sessionId: 'test-session-123',
           instruction: 'Test instruction',
           status: SessionStatus.inProgress,
@@ -1014,3 +1015,4 @@ void main() {
     });
   });
 }
+

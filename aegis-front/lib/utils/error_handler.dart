@@ -31,7 +31,7 @@ class ErrorHandler {
 
     if (errorStr.contains('TimeoutException') ||
         errorStr.contains('timed out')) {
-      return 'Request timed out. Please check your connection and try again.';
+      return 'Request timed out. Please try again.';
     }
 
     // Backend offline

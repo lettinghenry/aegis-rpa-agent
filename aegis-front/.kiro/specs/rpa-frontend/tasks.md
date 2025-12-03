@@ -605,13 +605,26 @@
   - Add navigation guards if needed
   - _Requirements: 1.4, 2.4, 4.5, 5.4, 6.4_
 
-- [ ]* 17.1 Write integration tests for navigation
+- [-] 17.1 Write integration tests for navigation
+
+
+
+
+
+
+
   - Test navigation flows
   - Test state preservation across navigation
   - Test back button handling
   - _Requirements: 2.4, 9.2_
 
-- [ ]* 17.2 Write property test for state preservation
+- [x] 17.2 Write property test for state preservation
+
+
+
+
+
+
   - **Property 32: State Preservation Across Navigation**
   - **Validates: Requirements 9.2**
 
