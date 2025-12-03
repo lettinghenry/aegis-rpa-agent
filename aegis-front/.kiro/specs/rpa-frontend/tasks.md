@@ -73,7 +73,13 @@
   - Mock SharedPreferences
   - _Requirements: 1.3_
 
-- [ ]* 3.2 Write property test for onboarding flag storage
+- [x] 3.2 Write property test for onboarding flag storage
+
+
+
+
+
+
   - **Property 1: Onboarding Flag Storage**
   - **Validates: Requirements 1.3**
 
