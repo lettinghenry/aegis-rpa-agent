@@ -640,7 +640,12 @@
   - Test error scenarios
   - _Requirements: 1.1, 2.3, 3.1, 5.3, 6.2_
 
-- [ ] 22. Implement scrollable subtask list with fixed header
+- [x] 22. Implement scrollable subtask list with fixed header
+
+
+
+
+
   - Ensure subtask list is scrollable when many subtasks present
   - Keep header (instruction display) fixed at top
   - Add scroll-to-bottom on new subtask

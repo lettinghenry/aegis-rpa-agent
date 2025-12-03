@@ -16,15 +16,33 @@ import '../utils/button_feedback.dart';
 /// - Cancel button with confirmation dialog
 /// - Overall status indicator
 /// - Done/Back button when complete
+/// - Auto-scroll to bottom on new subtasks
 /// 
-/// Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 13.2
-class TaskExecutionScreen extends StatelessWidget {
+/// Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 11.5, 13.2
+class TaskExecutionScreen extends StatefulWidget {
   const TaskExecutionScreen({super.key});
+
+  @override
+  State<TaskExecutionScreen> createState() => _TaskExecutionScreenState();
+}
+
+class _TaskExecutionScreenState extends State<TaskExecutionScreen> {
+  final ScrollController _scrollController = ScrollController();
+  int _previousSubtaskCount = 0;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ExecutionStateNotifier>(
       builder: (context, executionState, child) {
+        // Auto-scroll to bottom when new subtasks are added
+        _handleSubtaskUpdate(executionState);
+
         // Switch between normal and minimal layouts based on window mode
         if (executionState.isMinimalMode) {
           return _buildMinimalModeUI(context, executionState);
@@ -33,6 +51,31 @@ class TaskExecutionScreen extends StatelessWidget {
         }
       },
     );
+  }
+
+  /// Handle subtask updates and auto-scroll to bottom
+  /// 
+  /// Validates: Requirements 11.5
+  void _handleSubtaskUpdate(ExecutionStateNotifier executionState) {
+    final currentCount = executionState.subtasks.length;
+    
+    // Check if new subtasks were added
+    if (currentCount > _previousSubtaskCount) {
+      _previousSubtaskCount = currentCount;
+      
+      // Schedule scroll to bottom after the frame is rendered
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } else {
+      _previousSubtaskCount = currentCount;
+    }
   }
 
   /// Build normal mode UI (full screen)
@@ -306,7 +349,9 @@ class TaskExecutionScreen extends StatelessWidget {
     );
   }
 
-  /// Build scrollable subtask list
+  /// Build scrollable subtask list with scroll controller
+  /// 
+  /// Validates: Requirements 11.5
   Widget _buildSubtaskList(
     BuildContext context,
     ExecutionStateNotifier executionState,
@@ -336,6 +381,7 @@ class TaskExecutionScreen extends StatelessWidget {
     }
 
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: subtasks.length,
       itemBuilder: (context, index) {
