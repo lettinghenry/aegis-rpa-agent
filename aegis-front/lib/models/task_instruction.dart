@@ -1,3 +1,5 @@
+import '../utils/json_parser.dart';
+
 /// Task instruction request model
 class TaskInstructionRequest {
   final String instruction;
@@ -24,13 +26,20 @@ class TaskInstructionResponse {
     required this.message,
   });
 
-  /// Create TaskInstructionResponse from JSON
+  /// Create TaskInstructionResponse from JSON with error handling
   factory TaskInstructionResponse.fromJson(Map<String, dynamic> json) {
-    return TaskInstructionResponse(
-      sessionId: json['session_id'] as String,
-      status: json['status'] as String,
-      message: json['message'] as String,
-    );
+    try {
+      return TaskInstructionResponse(
+        sessionId: JsonParser.parseString(json, 'session_id'),
+        status: JsonParser.parseString(json, 'status'),
+        message: JsonParser.parseString(json, 'message'),
+      );
+    } catch (e) {
+      throw ParsingException(
+        'Failed to parse TaskInstructionResponse',
+        originalError: e,
+      );
+    }
   }
 
   /// Convert TaskInstructionResponse to JSON

@@ -10,10 +10,11 @@ void main() {
       expect(SubtaskStatus.fromString('failed'), SubtaskStatus.failed);
     });
 
-    test('fromString throws on invalid status', () {
+    test('fromString returns pending for invalid status', () {
+      // With error handling, invalid status defaults to pending
       expect(
-        () => SubtaskStatus.fromString('invalid'),
-        throwsArgumentError,
+        SubtaskStatus.fromString('invalid'),
+        SubtaskStatus.pending,
       );
     });
 

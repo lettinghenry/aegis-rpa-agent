@@ -1,3 +1,5 @@
+import '../utils/json_parser.dart';
+
 /// Error response model for API errors
 class ErrorResponse {
   final String error;
@@ -10,13 +12,20 @@ class ErrorResponse {
     this.sessionId,
   });
 
-  /// Create ErrorResponse from JSON
+  /// Create ErrorResponse from JSON with error handling
   factory ErrorResponse.fromJson(Map<String, dynamic> json) {
-    return ErrorResponse(
-      error: json['error'] as String,
-      details: json['details'] as String?,
-      sessionId: json['session_id'] as String?,
-    );
+    try {
+      return ErrorResponse(
+        error: JsonParser.parseString(json, 'error'),
+        details: JsonParser.parseOptionalString(json, 'details'),
+        sessionId: JsonParser.parseOptionalString(json, 'session_id'),
+      );
+    } catch (e) {
+      throw ParsingException(
+        'Failed to parse ErrorResponse',
+        originalError: e,
+      );
+    }
   }
 
   /// Convert ErrorResponse to JSON

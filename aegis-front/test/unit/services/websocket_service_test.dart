@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:aegis_front/services/websocket_service.dart';
 import 'package:aegis_front/models/status_update.dart';
 import 'package:aegis_front/models/subtask.dart';
+import 'package:aegis_front/utils/json_parser.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -114,7 +115,7 @@ void main() {
         );
       });
 
-      test('throws on missing required fields', () {
+      test('throws ParsingException on missing required fields', () {
         // Arrange
         final incompleteMessage = jsonEncode({
           'session_id': 'test-session',
@@ -125,7 +126,7 @@ void main() {
         final json = jsonDecode(incompleteMessage) as Map<String, dynamic>;
         expect(
           () => StatusUpdate.fromJson(json),
-          throwsA(isA<TypeError>()),
+          throwsA(isA<ParsingException>()),
         );
       });
     });

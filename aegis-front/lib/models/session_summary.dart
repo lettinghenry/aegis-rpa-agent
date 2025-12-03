@@ -1,3 +1,5 @@
+import '../utils/json_parser.dart';
+
 /// Session summary model for history display
 class SessionSummary {
   final String sessionId;
@@ -16,18 +18,23 @@ class SessionSummary {
     required this.subtaskCount,
   });
 
-  /// Create SessionSummary from JSON
+  /// Create SessionSummary from JSON with error handling
   factory SessionSummary.fromJson(Map<String, dynamic> json) {
-    return SessionSummary(
-      sessionId: json['session_id'] as String,
-      instruction: json['instruction'] as String,
-      status: json['status'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      completedAt: json['completed_at'] != null
-          ? DateTime.parse(json['completed_at'] as String)
-          : null,
-      subtaskCount: json['subtask_count'] as int,
-    );
+    try {
+      return SessionSummary(
+        sessionId: JsonParser.parseString(json, 'session_id'),
+        instruction: JsonParser.parseString(json, 'instruction'),
+        status: JsonParser.parseString(json, 'status'),
+        createdAt: JsonParser.parseDateTime(json, 'created_at'),
+        completedAt: JsonParser.parseOptionalDateTime(json, 'completed_at'),
+        subtaskCount: JsonParser.parseInt(json, 'subtask_count', defaultValue: 0),
+      );
+    } catch (e) {
+      throw ParsingException(
+        'Failed to parse SessionSummary',
+        originalError: e,
+      );
+    }
   }
 
   /// Convert SessionSummary to JSON
@@ -53,14 +60,24 @@ class HistoryResponse {
     required this.total,
   });
 
-  /// Create HistoryResponse from JSON
+  /// Create HistoryResponse from JSON with error handling
   factory HistoryResponse.fromJson(Map<String, dynamic> json) {
-    return HistoryResponse(
-      sessions: (json['sessions'] as List<dynamic>)
-          .map((s) => SessionSummary.fromJson(s as Map<String, dynamic>))
-          .toList(),
-      total: json['total'] as int,
-    );
+    try {
+      return HistoryResponse(
+        sessions: JsonParser.parseList(
+          json,
+          'sessions',
+          (item) => SessionSummary.fromJson(item as Map<String, dynamic>),
+          defaultValue: [],
+        ),
+        total: JsonParser.parseInt(json, 'total', defaultValue: 0),
+      );
+    } catch (e) {
+      throw ParsingException(
+        'Failed to parse HistoryResponse',
+        originalError: e,
+      );
+    }
   }
 
   /// Convert HistoryResponse to JSON

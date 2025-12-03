@@ -1,3 +1,5 @@
+import '../utils/json_parser.dart';
+
 /// Subtask status enumeration
 enum SubtaskStatus {
   pending,
@@ -5,7 +7,7 @@ enum SubtaskStatus {
   completed,
   failed;
 
-  /// Convert string to SubtaskStatus enum
+  /// Convert string to SubtaskStatus enum with error handling
   static SubtaskStatus fromString(String value) {
     switch (value) {
       case 'pending':
@@ -17,7 +19,8 @@ enum SubtaskStatus {
       case 'failed':
         return SubtaskStatus.failed;
       default:
-        throw ArgumentError('Invalid subtask status: $value');
+        // Default to pending for unknown status values
+        return SubtaskStatus.pending;
     }
   }
 
@@ -58,18 +61,27 @@ class Subtask {
     required this.timestamp,
   });
 
-  /// Create Subtask from JSON
+  /// Create Subtask from JSON with error handling
   factory Subtask.fromJson(Map<String, dynamic> json) {
-    return Subtask(
-      id: json['id'] as String,
-      description: json['description'] as String,
-      status: SubtaskStatus.fromString(json['status'] as String),
-      toolName: json['tool_name'] as String?,
-      toolArgs: json['tool_args'] as Map<String, dynamic>?,
-      result: json['result'] as Map<String, dynamic>?,
-      error: json['error'] as String?,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-    );
+    try {
+      return Subtask(
+        id: JsonParser.parseString(json, 'id'),
+        description: JsonParser.parseString(json, 'description'),
+        status: SubtaskStatus.fromString(
+          JsonParser.parseString(json, 'status'),
+        ),
+        toolName: JsonParser.parseOptionalString(json, 'tool_name'),
+        toolArgs: JsonParser.parseOptionalMap(json, 'tool_args'),
+        result: JsonParser.parseOptionalMap(json, 'result'),
+        error: JsonParser.parseOptionalString(json, 'error'),
+        timestamp: JsonParser.parseDateTime(json, 'timestamp'),
+      );
+    } catch (e) {
+      throw ParsingException(
+        'Failed to parse Subtask',
+        originalError: e,
+      );
+    }
   }
 
   /// Convert Subtask to JSON

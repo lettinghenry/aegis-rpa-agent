@@ -214,7 +214,7 @@ void main() {
           throwsA(isA<ApiException>().having(
             (e) => e.message,
             'message',
-            contains('Failed to parse response'),
+            contains('Received invalid data from server'),
           )),
         );
       });

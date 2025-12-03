@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../models/status_update.dart';
 import '../config/app_config.dart';
+import '../utils/json_parser.dart';
 
 /// Service for managing WebSocket connections to receive real-time execution updates.
 /// 
@@ -164,7 +166,35 @@ class WebSocketService {
       if (_onUpdate != null) {
         _onUpdate!(update);
       }
+    } on FormatException catch (e) {
+      // Invalid JSON format
+      developer.log(
+        'Invalid JSON in WebSocket message: $message',
+        name: 'WebSocketService',
+        error: e,
+      );
+      print('Error: Received invalid JSON from WebSocket');
+      if (_onError != null) {
+        _onError!(Exception('Invalid message format from server'));
+      }
+    } on ParsingException catch (e) {
+      // Model parsing error
+      developer.log(
+        'Failed to parse WebSocket message: $e',
+        name: 'WebSocketService',
+        error: e,
+      );
+      print('Error: Failed to parse WebSocket message: $e');
+      if (_onError != null) {
+        _onError!(Exception('Unexpected message format from server'));
+      }
     } catch (e) {
+      // Unknown error
+      developer.log(
+        'Unexpected error parsing WebSocket message: $e',
+        name: 'WebSocketService',
+        error: e,
+      );
       print('Error parsing WebSocket message: $e');
       if (_onError != null) {
         _onError!(e);

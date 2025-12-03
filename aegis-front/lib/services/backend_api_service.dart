@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/task_instruction.dart';
 import '../models/execution_session.dart';
 import '../models/session_summary.dart';
 import '../models/error_response.dart';
+import '../utils/json_parser.dart';
 
 /// Custom exception for API errors
 class ApiException implements Exception {
@@ -221,9 +223,39 @@ class BackendApiService {
       try {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         return fromJson(json);
-      } catch (e) {
+      } on FormatException catch (e) {
+        // Invalid JSON format
+        developer.log(
+          'Invalid JSON in response: ${response.body}',
+          name: 'BackendApiService',
+          error: e,
+        );
         throw ApiException(
-          'Failed to parse response',
+          'Received invalid data from server. Please try again.',
+          statusCode: response.statusCode,
+          details: 'Invalid JSON format',
+        );
+      } on ParsingException catch (e) {
+        // Model parsing error
+        developer.log(
+          'Failed to parse response model: $e',
+          name: 'BackendApiService',
+          error: e,
+        );
+        throw ApiException(
+          'Received unexpected data from server. Please try again.',
+          statusCode: response.statusCode,
+          details: e.toString(),
+        );
+      } catch (e) {
+        // Unknown parsing error
+        developer.log(
+          'Unexpected error parsing response: $e',
+          name: 'BackendApiService',
+          error: e,
+        );
+        throw ApiException(
+          'Failed to process server response. Please try again.',
           statusCode: response.statusCode,
           details: e.toString(),
         );
@@ -258,41 +290,60 @@ class BackendApiService {
           statusCode: statusCode,
           details: errorResponse.details,
         );
-      } catch (_) {
-        // If not an ErrorResponse, use generic error
+      } on ParsingException catch (e) {
+        // Failed to parse ErrorResponse, try generic fields
+        developer.log(
+          'Failed to parse error response: $e',
+          name: 'BackendApiService',
+          error: e,
+        );
         final errorMsg = json['error'] ?? json['detail'] ?? 'Unknown error';
         throw ApiException(
           errorMsg is String ? errorMsg : 'Unknown error',
           statusCode: statusCode,
         );
       }
+    } on FormatException catch (e) {
+      // Invalid JSON in error response
+      developer.log(
+        'Invalid JSON in error response: ${response.body}',
+        name: 'BackendApiService',
+        error: e,
+      );
+      // Fall through to generic error handling
     } catch (e) {
       if (e is ValidationException || e is ApiException) {
         rethrow;
       }
+      // Log unexpected error
+      developer.log(
+        'Unexpected error parsing error response: $e',
+        name: 'BackendApiService',
+        error: e,
+      );
+    }
 
-      // If we can't parse the error, provide a generic message
-      if (statusCode == 404) {
-        throw ApiException(
-          'Resource not found',
-          statusCode: statusCode,
-        );
-      } else if (statusCode == 500) {
-        throw ApiException(
-          'Internal server error. Please try again later.',
-          statusCode: statusCode,
-        );
-      } else if (statusCode >= 500) {
-        throw ApiException(
-          'The automation service is currently offline. Please try again later.',
-          statusCode: statusCode,
-        );
-      } else {
-        throw ApiException(
-          'Request failed with status $statusCode',
-          statusCode: statusCode,
-        );
-      }
+    // If we can't parse the error, provide a generic message based on status code
+    if (statusCode == 404) {
+      throw ApiException(
+        'Resource not found',
+        statusCode: statusCode,
+      );
+    } else if (statusCode == 500) {
+      throw ApiException(
+        'Internal server error. Please try again later.',
+        statusCode: statusCode,
+      );
+    } else if (statusCode >= 500) {
+      throw ApiException(
+        'The automation service is currently offline. Please try again later.',
+        statusCode: statusCode,
+      );
+    } else {
+      throw ApiException(
+        'Request failed with status $statusCode',
+        statusCode: statusCode,
+      );
     }
   }
 

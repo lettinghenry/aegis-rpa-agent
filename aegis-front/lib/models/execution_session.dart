@@ -1,4 +1,5 @@
 import 'subtask.dart';
+import '../utils/json_parser.dart';
 
 /// Session status enumeration
 enum SessionStatus {
@@ -8,7 +9,7 @@ enum SessionStatus {
   failed,
   cancelled;
 
-  /// Convert string to SessionStatus enum
+  /// Convert string to SessionStatus enum with error handling
   static SessionStatus fromString(String value) {
     switch (value) {
       case 'pending':
@@ -22,7 +23,8 @@ enum SessionStatus {
       case 'cancelled':
         return SessionStatus.cancelled;
       default:
-        throw ArgumentError('Invalid session status: $value');
+        // Default to pending for unknown status values
+        return SessionStatus.pending;
     }
   }
 
@@ -63,21 +65,31 @@ class ExecutionSession {
     this.completedAt,
   });
 
-  /// Create ExecutionSession from JSON
+  /// Create ExecutionSession from JSON with error handling
   factory ExecutionSession.fromJson(Map<String, dynamic> json) {
-    return ExecutionSession(
-      sessionId: json['session_id'] as String,
-      instruction: json['instruction'] as String,
-      status: SessionStatus.fromString(json['status'] as String),
-      subtasks: (json['subtasks'] as List<dynamic>)
-          .map((s) => Subtask.fromJson(s as Map<String, dynamic>))
-          .toList(),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      completedAt: json['completed_at'] != null
-          ? DateTime.parse(json['completed_at'] as String)
-          : null,
-    );
+    try {
+      return ExecutionSession(
+        sessionId: JsonParser.parseString(json, 'session_id'),
+        instruction: JsonParser.parseString(json, 'instruction'),
+        status: SessionStatus.fromString(
+          JsonParser.parseString(json, 'status'),
+        ),
+        subtasks: JsonParser.parseList(
+          json,
+          'subtasks',
+          (item) => Subtask.fromJson(item as Map<String, dynamic>),
+          defaultValue: [],
+        ),
+        createdAt: JsonParser.parseDateTime(json, 'created_at'),
+        updatedAt: JsonParser.parseDateTime(json, 'updated_at'),
+        completedAt: JsonParser.parseOptionalDateTime(json, 'completed_at'),
+      );
+    } catch (e) {
+      throw ParsingException(
+        'Failed to parse ExecutionSession',
+        originalError: e,
+      );
+    }
   }
 
   /// Convert ExecutionSession to JSON

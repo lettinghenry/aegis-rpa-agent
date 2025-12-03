@@ -1,4 +1,5 @@
 import 'subtask.dart';
+import '../utils/json_parser.dart';
 
 /// Status update model for WebSocket messages
 class StatusUpdate {
@@ -18,18 +19,34 @@ class StatusUpdate {
     required this.timestamp,
   });
 
-  /// Create StatusUpdate from JSON
+  /// Create StatusUpdate from JSON with error handling
   factory StatusUpdate.fromJson(Map<String, dynamic> json) {
-    return StatusUpdate(
-      sessionId: json['session_id'] as String,
-      subtask: json['subtask'] != null
-          ? Subtask.fromJson(json['subtask'] as Map<String, dynamic>)
-          : null,
-      overallStatus: json['overall_status'] as String,
-      message: json['message'] as String,
-      windowState: json['window_state'] as String?,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-    );
+    try {
+      Subtask? parsedSubtask;
+      final subtaskJson = JsonParser.parseOptionalMap(json, 'subtask');
+      if (subtaskJson != null) {
+        try {
+          parsedSubtask = Subtask.fromJson(subtaskJson);
+        } catch (e) {
+          // Log error but continue - subtask is optional
+          print('Warning: Failed to parse subtask in StatusUpdate: $e');
+        }
+      }
+
+      return StatusUpdate(
+        sessionId: JsonParser.parseString(json, 'session_id'),
+        subtask: parsedSubtask,
+        overallStatus: JsonParser.parseString(json, 'overall_status'),
+        message: JsonParser.parseString(json, 'message'),
+        windowState: JsonParser.parseOptionalString(json, 'window_state'),
+        timestamp: JsonParser.parseDateTime(json, 'timestamp'),
+      );
+    } catch (e) {
+      throw ParsingException(
+        'Failed to parse StatusUpdate',
+        originalError: e,
+      );
+    }
   }
 
   /// Convert StatusUpdate to JSON

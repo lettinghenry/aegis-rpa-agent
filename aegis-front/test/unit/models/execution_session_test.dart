@@ -12,10 +12,11 @@ void main() {
       expect(SessionStatus.fromString('cancelled'), SessionStatus.cancelled);
     });
 
-    test('fromString throws on invalid status', () {
+    test('fromString returns pending for invalid status', () {
+      // With error handling, invalid status defaults to pending
       expect(
-        () => SessionStatus.fromString('invalid'),
-        throwsArgumentError,
+        SessionStatus.fromString('invalid'),
+        SessionStatus.pending,
       );
     });
 
