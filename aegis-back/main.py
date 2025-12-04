@@ -367,10 +367,10 @@ async def websocket_execution(websocket: WebSocket, session_id: str):
             
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for session: {session_id}")
-        await websocket_manager.disconnect(session_id)
+        await websocket_manager.disconnect(websocket, session_id)
     except Exception as e:
         logger.error(f"WebSocket error for session {session_id}: {e}")
-        await websocket_manager.disconnect(session_id)
+        await websocket_manager.disconnect(websocket, session_id)
 
 
 async def process_execution_queue():
