@@ -641,7 +641,10 @@
   - Implement button disabling during operations
   - _Requirements: 7.1, 7.3, 7.4, 8.3, 10.1, 10.2, 10.3, 10.4, 10.5_
 
-- [ ]* 18.1 Write widget tests for error handling
+- [-] 18.1 Write widget tests for error handling
+
+
+
   - Test error message display
   - Test loading indicators
   - Test button feedback
