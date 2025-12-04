@@ -64,7 +64,7 @@ class AegisApp extends StatelessWidget {
 
         // State notifiers
         ChangeNotifierProvider<AppState>(
-          create: (_) => AppState()..loadOnboardingStatus(),
+          create: (_) => AppState(),
         ),
         ChangeNotifierProvider<ExecutionStateNotifier>(
           create: (context) => ExecutionStateNotifier(
@@ -79,38 +79,14 @@ class AegisApp extends StatelessWidget {
           ),
         ),
       ],
-      child: Consumer<AppState>(
-        builder: (context, appState, child) {
-          // Show loading screen while checking onboarding status
-          if (appState.isLoading) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.lightTheme(),
-              darkTheme: AppTheme.darkTheme(),
-              themeMode: ThemeMode.system,
-              home: const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-            );
-          }
-
-          // Determine initial route based on onboarding status
-          final initialRoute = AppRouter.getInitialRoute(
-            appState.onboardingCompleted,
-          );
-
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'AEGIS RPA Frontend',
-            theme: AppTheme.lightTheme(),
-            darkTheme: AppTheme.darkTheme(),
-            themeMode: ThemeMode.system,
-            initialRoute: initialRoute,
-            onGenerateRoute: AppRouter.onGenerateRoute,
-          );
-        },
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'AEGIS RPA Frontend',
+        theme: AppTheme.lightTheme(),
+        darkTheme: AppTheme.darkTheme(),
+        themeMode: ThemeMode.system,
+        initialRoute: AppRouter.onboarding,
+        onGenerateRoute: AppRouter.onGenerateRoute,
       ),
     );
   }

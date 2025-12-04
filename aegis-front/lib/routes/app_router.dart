@@ -45,7 +45,10 @@ class AppRouter {
   /// 
   /// Validates: Requirements 2.4, 4.5, 5.4, 6.4
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
+    // Handle null or empty route name
+    final routeName = settings.name ?? landing;
+    
+    switch (routeName) {
       case onboarding:
         return MaterialPageRoute(
           builder: (_) => const OnboardingScreen(),
