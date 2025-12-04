@@ -114,6 +114,9 @@ class ExecutionStateNotifier extends ChangeNotifier with WidgetsBindingObserver 
   /// Validates: Requirements 3.2, 3.3, 3.4, 3.5, 9.3, 9.4, 9.5, 13.1, 13.2, 13.3, 13.4, 13.5
   void onStatusUpdate(StatusUpdate update) {
     try {
+      // DEBUG: Log the update
+      print('ExecutionState received update - subtask: ${update.subtask?.id}, status: ${update.overallStatus}, subtasks count: ${_subtasks.length}');
+      
       // If app is backgrounded, queue the update for later processing
       if (_isAppInBackground) {
         _pendingUpdates.add(update);
@@ -133,7 +136,9 @@ class ExecutionStateNotifier extends ChangeNotifier with WidgetsBindingObserver 
 
       // Handle subtask updates
       if (update.subtask != null) {
+        print('DEBUG: Adding/updating subtask ${update.subtask!.id}');
         _updateSubtask(update.subtask!);
+        print('DEBUG: Subtasks count after update: ${_subtasks.length}');
       }
 
       // Update overall status

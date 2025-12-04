@@ -159,8 +159,14 @@ class WebSocketService {
       // Parse JSON message
       final Map<String, dynamic> json = jsonDecode(message as String);
       
+      // DEBUG: Log the raw message
+      print('WebSocket received: $json');
+      
       // Deserialize to StatusUpdate
       final update = StatusUpdate.fromJson(json);
+      
+      // DEBUG: Log parsed update
+      print('Parsed StatusUpdate - subtask: ${update.subtask?.id}, status: ${update.overallStatus}');
       
       // Invoke callback
       if (_onUpdate != null) {
