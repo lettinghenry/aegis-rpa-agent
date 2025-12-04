@@ -24,7 +24,12 @@
   - Add validation logic to models
   - _Requirements: 7.1, 7.3, 13.2_
 
-- [ ]* 2.1 Write unit tests for data models
+- [x] 2.1 Write unit tests for data models
+
+
+
+
+
   - Test model serialization and deserialization
   - Test validation logic
   - Test edge cases (empty fields, invalid types)
@@ -77,7 +82,13 @@
   - Wrap PyAutoGUI and Win32API calls
   - _Requirements: 1.2, 3.1, 3.2, 3.3, 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ]* 5.1 Write unit tests for RPA tools
+- [x] 5.1 Write unit tests for RPA tools
+
+
+
+
+
+
   - Test each tool function with mock PyAutoGUI/Win32API
   - Test error handling in tools
   - Test ToolResult structure
@@ -238,7 +249,13 @@
   - Add logic to send WINDOW_STATE_NORMAL on execution completion or cancellation
   - _Requirements: 2.1, 2.3, 1.3, 6.5, 8.4, 13.1, 13.3, 13.4, 13.5_
 
-- [ ]* 13.1 Write integration tests for execution flow
+- [x] 13.1 Write integration tests for execution flow
+
+
+
+
+
+
   - Test end-to-end task execution
   - Test WebSocket message streaming
   - Test error handling and retry logic

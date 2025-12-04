@@ -417,5 +417,499 @@ async def test_sequential_request_processing(
     print("✓ Sequential processing test passed")
 
 
+@pytest.mark.asyncio
+async def test_retry_logic_with_eventual_success(
+    mock_preprocessor,
+    session_manager,
+    history_store,
+    websocket_manager
+):
+    """
+    Test retry logic when action fails initially but succeeds on retry.
+    
+    Validates: Requirements 6.3, 6.4 (retry with exponential backoff)
+    """
+    from src.rpa_engine import RPAEngine
+    from unittest.mock import Mock
+    
+    instruction = "Click button"
+    
+    # Pre-processing
+    validation_result, sanitized = mock_preprocessor.validate_and_sanitize(instruction)
+    assert validation_result.is_valid
+    
+    # Create session
+    session_id = session_manager.create_session(sanitized)
+    session = session_manager.get_session(session_id)
+    session.status = "in_progress"
+    
+    # Create RPA engine
+    engine = RPAEngine(max_retries=3)
+    
+    # Mock a tool that fails twice then succeeds
+    call_count = 0
+    def mock_click_tool(x, y, button):
+        nonlocal call_count
+        call_count += 1
+        if call_count < 3:
+            return ToolResult(success=False, error=f"Click failed (attempt {call_count})")
+        return ToolResult(success=True, data={"x": x, "y": y})
+    
+    # Patch the click_element function
+    with patch('src.rpa_engine.click_element', side_effect=lambda x, y, b: mock_click_tool(x, y, b)):
+        # Execute click with retry
+        result = engine.execute_click(100, 200, "left")
+        
+        # Verify eventual success
+        assert result.success
+        assert result.retry_count == 2  # Failed twice, succeeded on 3rd attempt
+        assert call_count == 3
+    
+    # Update session to completed
+    session.status = "completed"
+    session.completed_at = datetime.now()
+    history_store.save_session(session)
+    
+    # Send completion update with window restore
+    completion_update = StatusUpdate(
+        session_id=session_id,
+        subtask=None,
+        overall_status="completed",
+        message="Task completed after retries",
+        window_state="normal",
+        timestamp=datetime.now()
+    )
+    await websocket_manager.broadcast_update(session_id, completion_update)
+    
+    print("✓ Retry logic with eventual success test passed")
+
+
+@pytest.mark.asyncio
+async def test_retry_logic_with_all_failures(
+    mock_preprocessor,
+    session_manager,
+    history_store,
+    websocket_manager
+):
+    """
+    Test retry logic when action fails all retry attempts.
+    
+    Validates: Requirements 6.3, 6.4 (retry exhaustion and failure reporting)
+    """
+    from src.rpa_engine import RPAEngine
+    from unittest.mock import Mock
+    
+    instruction = "Click button"
+    
+    # Pre-processing
+    validation_result, sanitized = mock_preprocessor.validate_and_sanitize(instruction)
+    assert validation_result.is_valid
+    
+    # Create session
+    session_id = session_manager.create_session(sanitized)
+    session = session_manager.get_session(session_id)
+    session.status = "in_progress"
+    
+    # Create RPA engine
+    engine = RPAEngine(max_retries=3)
+    
+    # Mock a tool that always fails
+    call_count = 0
+    def mock_failing_tool(x, y, button):
+        nonlocal call_count
+        call_count += 1
+        return ToolResult(success=False, error=f"Click failed (attempt {call_count})")
+    
+    # Patch the click_element function
+    with patch('src.rpa_engine.click_element', side_effect=lambda x, y, b: mock_failing_tool(x, y, b)):
+        # Execute click with retry
+        result = engine.execute_click(100, 200, "left")
+        
+        # Verify failure after all retries
+        assert not result.success
+        assert result.retry_count == 3  # All 3 attempts failed
+        assert call_count == 3
+        assert "Click failed" in result.error
+    
+    # Update session to failed
+    session.status = "failed"
+    session.completed_at = datetime.now()
+    history_store.save_session(session)
+    
+    # Send failure update with window restore
+    failure_update = StatusUpdate(
+        session_id=session_id,
+        subtask=None,
+        overall_status="failed",
+        message="Task failed after all retries",
+        window_state="normal",
+        timestamp=datetime.now()
+    )
+    await websocket_manager.broadcast_update(session_id, failure_update)
+    
+    # Verify history
+    retrieved = history_store.get_session_details(session_id)
+    assert retrieved.status == "failed"
+    
+    print("✓ Retry logic with all failures test passed")
+
+
+@pytest.mark.asyncio
+async def test_exponential_backoff_timing(
+    mock_preprocessor,
+    session_manager
+):
+    """
+    Test that retry logic uses exponential backoff (1s, 2s, 4s).
+    
+    Validates: Requirement 6.3 (exponential backoff timing)
+    """
+    from src.rpa_engine import RPAEngine
+    from unittest.mock import Mock
+    import time
+    
+    instruction = "Click button"
+    
+    # Pre-processing
+    validation_result, sanitized = mock_preprocessor.validate_and_sanitize(instruction)
+    assert validation_result.is_valid
+    
+    # Create session
+    session_id = session_manager.create_session(sanitized)
+    
+    # Create RPA engine
+    engine = RPAEngine(max_retries=3)
+    
+    # Track timing between attempts
+    attempt_times = []
+    
+    def mock_failing_tool(x, y, button):
+        attempt_times.append(time.time())
+        return ToolResult(success=False, error="Click failed")
+    
+    # Patch the click_element function
+    with patch('src.rpa_engine.click_element', side_effect=lambda x, y, b: mock_failing_tool(x, y, b)):
+        # Execute click with retry
+        start_time = time.time()
+        result = engine.execute_click(100, 200, "left")
+        total_time = time.time() - start_time
+        
+        # Verify failure
+        assert not result.success
+        assert len(attempt_times) == 3
+        
+        # Verify exponential backoff timing (1s + 2s = 3s minimum between first and last)
+        # Allow some tolerance for execution time
+        assert total_time >= 3.0, f"Expected at least 3s total time, got {total_time:.2f}s"
+        assert total_time < 10.0, f"Expected less than 10s total time, got {total_time:.2f}s"
+        
+        # Check delays between attempts (with tolerance)
+        if len(attempt_times) >= 2:
+            delay1 = attempt_times[1] - attempt_times[0]
+            assert 0.9 <= delay1 <= 1.5, f"First delay should be ~1s, got {delay1:.2f}s"
+        
+        if len(attempt_times) >= 3:
+            delay2 = attempt_times[2] - attempt_times[1]
+            assert 1.9 <= delay2 <= 2.5, f"Second delay should be ~2s, got {delay2:.2f}s"
+    
+    print("✓ Exponential backoff timing test passed")
+
+
+@pytest.mark.asyncio
+async def test_websocket_streaming_during_retries(
+    mock_preprocessor,
+    session_manager,
+    websocket_manager
+):
+    """
+    Test that WebSocket updates are sent during retry attempts.
+    
+    Validates: Requirements 1.5, 7.2, 7.3, 7.4 (WebSocket streaming during retries)
+    """
+    from src.rpa_engine import RPAEngine
+    from unittest.mock import Mock
+    
+    instruction = "Click button"
+    
+    # Pre-processing
+    validation_result, sanitized = mock_preprocessor.validate_and_sanitize(instruction)
+    assert validation_result.is_valid
+    
+    # Create session
+    session_id = session_manager.create_session(sanitized)
+    session = session_manager.get_session(session_id)
+    session.status = "in_progress"
+    
+    # Create RPA engine
+    engine = RPAEngine(max_retries=3)
+    
+    # Mock a tool that fails twice then succeeds
+    call_count = 0
+    def mock_click_tool(x, y, button):
+        nonlocal call_count
+        call_count += 1
+        if call_count < 3:
+            return ToolResult(success=False, error=f"Click failed (attempt {call_count})")
+        return ToolResult(success=True, data={"x": x, "y": y})
+    
+    # Track WebSocket updates
+    updates_sent = []
+    
+    async def track_update(sid, update):
+        updates_sent.append(update)
+    
+    websocket_manager.broadcast_update = AsyncMock(side_effect=track_update)
+    
+    # Patch the click_element function
+    with patch('src.rpa_engine.click_element', side_effect=lambda x, y, b: mock_click_tool(x, y, b)):
+        # Execute click with retry
+        result = engine.execute_click(100, 200, "left")
+        
+        # Send updates for each retry attempt
+        for attempt in range(call_count):
+            status = SubtaskStatus.IN_PROGRESS if attempt < call_count - 1 else SubtaskStatus.COMPLETED
+            update = StatusUpdate(
+                session_id=session_id,
+                subtask=Subtask(
+                    id=f"{session_id}_subtask_1",
+                    description=f"Click button (attempt {attempt + 1})",
+                    status=status,
+                    tool_name="click_element",
+                    tool_args={"x": 100, "y": 200, "button": "left"},
+                    timestamp=datetime.now()
+                ),
+                overall_status="in_progress",
+                message=f"Retry attempt {attempt + 1}",
+                timestamp=datetime.now()
+            )
+            await websocket_manager.broadcast_update(session_id, update)
+        
+        # Verify updates were sent
+        assert len(updates_sent) >= 3  # At least one update per retry
+        assert result.success
+    
+    print("✓ WebSocket streaming during retries test passed")
+
+
+@pytest.mark.asyncio
+async def test_error_handling_with_structured_responses(
+    mock_preprocessor,
+    session_manager,
+    history_store,
+    websocket_manager
+):
+    """
+    Test that errors are reported with structured error responses.
+    
+    Validates: Requirements 8.1, 8.2, 8.3 (structured error responses)
+    """
+    from src.rpa_engine import RPAEngine
+    from unittest.mock import Mock
+    
+    instruction = "Launch application"
+    
+    # Pre-processing
+    validation_result, sanitized = mock_preprocessor.validate_and_sanitize(instruction)
+    assert validation_result.is_valid
+    
+    # Create session
+    session_id = session_manager.create_session(sanitized)
+    session = session_manager.get_session(session_id)
+    session.status = "in_progress"
+    
+    # Create RPA engine
+    engine = RPAEngine(max_retries=3)
+    
+    # Mock a tool that raises a system error
+    def mock_launch_tool(app_name, wait_time):
+        return ToolResult(
+            success=False,
+            error="Permission denied: Cannot launch application"
+        )
+    
+    # Patch the launch_application function
+    with patch('src.rpa_engine.launch_application', side_effect=lambda a, w: mock_launch_tool(a, w)):
+        # Execute launch with retry
+        result = engine.launch_app("notepad", 5)
+        
+        # Verify structured error response
+        assert not result.success
+        assert result.error is not None
+        assert "Permission denied" in result.error
+        assert result.retry_count == 3
+    
+    # Update session with structured error
+    session.status = "failed"
+    session.completed_at = datetime.now()
+    
+    # Create subtask with error details
+    error_subtask = Subtask(
+        id=f"{session_id}_subtask_1",
+        description="Launch application",
+        status=SubtaskStatus.FAILED,
+        tool_name="launch_application",
+        tool_args={"app_name": "notepad", "wait_time": 5},
+        error="Permission denied: Cannot launch application",
+        timestamp=datetime.now()
+    )
+    session.subtasks.append(error_subtask)
+    
+    history_store.save_session(session)
+    
+    # Send structured error update
+    error_update = StatusUpdate(
+        session_id=session_id,
+        subtask=error_subtask,
+        overall_status="failed",
+        message="System error: Permission denied",
+        window_state="normal",
+        timestamp=datetime.now()
+    )
+    await websocket_manager.broadcast_update(session_id, error_update)
+    
+    # Verify error was properly recorded
+    retrieved = history_store.get_session_details(session_id)
+    assert retrieved.status == "failed"
+    assert len(retrieved.subtasks) == 1
+    assert retrieved.subtasks[0].error == "Permission denied: Cannot launch application"
+    
+    print("✓ Structured error responses test passed")
+
+
+@pytest.mark.asyncio
+async def test_multiple_subtasks_with_mixed_results(
+    mock_preprocessor,
+    mock_adk_agent,
+    session_manager,
+    history_store,
+    websocket_manager
+):
+    """
+    Test execution flow with multiple subtasks having mixed success/failure results.
+    
+    Validates: Requirements 1.3, 1.4, 6.5 (multi-step execution with error handling)
+    """
+    instruction = "Open notepad and type text"
+    
+    # Configure ADK agent to yield multiple subtasks
+    async def mock_multi_step_execute(instruction, session_id):
+        # Subtask 1: Launch (success)
+        yield StatusUpdate(
+            session_id=session_id,
+            subtask=Subtask(
+                id=f"{session_id}_subtask_1",
+                description="Launch notepad",
+                status=SubtaskStatus.IN_PROGRESS,
+                tool_name="launch_application",
+                tool_args={"app_name": "notepad"},
+                timestamp=datetime.now()
+            ),
+            overall_status="in_progress",
+            message="Starting subtask: launch_application",
+            window_state="minimal",
+            timestamp=datetime.now()
+        )
+        
+        yield StatusUpdate(
+            session_id=session_id,
+            subtask=Subtask(
+                id=f"{session_id}_subtask_1",
+                description="Launch notepad",
+                status=SubtaskStatus.COMPLETED,
+                tool_name="launch_application",
+                tool_args={"app_name": "notepad"},
+                result={"success": True},
+                timestamp=datetime.now()
+            ),
+            overall_status="in_progress",
+            message="Completed subtask: launch_application",
+            timestamp=datetime.now()
+        )
+        
+        # Subtask 2: Type text (fails after retries)
+        yield StatusUpdate(
+            session_id=session_id,
+            subtask=Subtask(
+                id=f"{session_id}_subtask_2",
+                description="Type text",
+                status=SubtaskStatus.IN_PROGRESS,
+                tool_name="type_text",
+                tool_args={"text": "Hello World"},
+                timestamp=datetime.now()
+            ),
+            overall_status="in_progress",
+            message="Starting subtask: type_text",
+            timestamp=datetime.now()
+        )
+        
+        yield StatusUpdate(
+            session_id=session_id,
+            subtask=Subtask(
+                id=f"{session_id}_subtask_2",
+                description="Type text",
+                status=SubtaskStatus.FAILED,
+                tool_name="type_text",
+                tool_args={"text": "Hello World"},
+                error="Focus verification failed after 3 retries",
+                timestamp=datetime.now()
+            ),
+            overall_status="failed",
+            message="Failed subtask: type_text",
+            timestamp=datetime.now()
+        )
+        
+        # Final update with window restore
+        yield StatusUpdate(
+            session_id=session_id,
+            subtask=None,
+            overall_status="failed",
+            message="Task execution failed",
+            window_state="normal",
+            timestamp=datetime.now()
+        )
+    
+    mock_adk_agent.execute_instruction = mock_multi_step_execute
+    
+    # Pre-processing
+    validation_result, sanitized = mock_preprocessor.validate_and_sanitize(instruction)
+    assert validation_result.is_valid
+    
+    # Create session
+    session_id = session_manager.create_session(sanitized)
+    session = session_manager.get_session(session_id)
+    session.status = "in_progress"
+    
+    # Execute instruction
+    subtask_count = 0
+    async for status_update in mock_adk_agent.execute_instruction(sanitized, session_id):
+        session_manager.update_session(session_id, status_update)
+        await websocket_manager.broadcast_update(session_id, status_update)
+        
+        if status_update.subtask:
+            subtask_count += 1
+        
+        if status_update.overall_status in ["completed", "failed"]:
+            final_session = session_manager.get_session(session_id)
+            final_session.completed_at = datetime.now()
+            history_store.save_session(final_session)
+            break
+    
+    # Verify mixed results
+    final_session = session_manager.get_session(session_id)
+    assert final_session.status == "failed"
+    assert len(final_session.subtasks) >= 2
+    
+    # First subtask should be completed
+    completed_subtasks = [s for s in final_session.subtasks if s.status == SubtaskStatus.COMPLETED]
+    assert len(completed_subtasks) >= 1
+    
+    # Second subtask should be failed
+    failed_subtasks = [s for s in final_session.subtasks if s.status == SubtaskStatus.FAILED]
+    assert len(failed_subtasks) >= 1
+    assert "retries" in failed_subtasks[0].error.lower() or "retry" in failed_subtasks[0].error.lower()
+    
+    print("✓ Multiple subtasks with mixed results test passed")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

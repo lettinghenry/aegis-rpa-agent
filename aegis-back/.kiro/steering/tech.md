@@ -94,7 +94,7 @@ Environment variables in `.env`:
 
 ### ADK Configuration
 - `GOOGLE_ADK_API_KEY`: Google Cloud API key for ADK
-- `GEMINI_MODEL`: Gemini model version (default: gemini-1.5-pro)
+- `GEMINI_MODEL`: Gemini model version (default: gemini-robotics-er-1.5-preview)
 - `ADK_TIMEOUT`: Timeout for ADK requests in seconds (default: 30)
 
 ### Server Configuration
