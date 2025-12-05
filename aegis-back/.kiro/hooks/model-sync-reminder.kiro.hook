@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Model Sync Checker",
+  "description": "Reminds to check if Dart models need updates when backend models.py is modified",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/models.py"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "The backend models.py file has been updated. Please:\n\n1. Review the changes made to the Pydantic models\n2. Check if corresponding Dart models in aegis-front/lib/models/ need updates\n3. Ensure type safety is maintained between backend and frontend\n4. Verify that fromJson() and toJson() methods in Dart models match the backend structure\n5. Check if any enums (SubtaskStatus, SessionStatus) need synchronization\n\nProvide a summary of:\n- What models were changed in the backend\n- Which Dart models need updates (if any)\n- Specific changes required to maintain API contract alignment"
+  }
+}

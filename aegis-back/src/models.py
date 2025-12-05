@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 from datetime import datetime
 from enum import Enum
+from dataclasses import dataclass
 
 
 class TaskInstructionRequest(BaseModel):
@@ -113,3 +114,15 @@ class ActionResult(BaseModel):
     success: bool
     retry_count: int
     error: Optional[str] = None
+
+
+@dataclass
+class LauncherConfig:
+    """Configuration for Local App Launcher timing and paths."""
+    mapping_file: str = "config/app_mappings.json"
+    menu_open_delay: float = 1.0
+    typing_interval: float = 0.1
+    search_delay: float = 1.0
+    launch_delay: float = 2.0
+    verification_timeout: float = 5.0
+    max_instruction_words: int = 10

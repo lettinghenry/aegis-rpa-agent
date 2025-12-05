@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Backend Test Runner",
+  "description": "Automatically runs unit tests for the corresponding test file when a Python source file in src/ is saved",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.py"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd aegis-back && pytest tests/unit/test_{{file_name_without_ext}}.py -v",
+    "workingDirectory": "aegis-back"
+  }
+}

@@ -10,6 +10,7 @@ AEGIS RPA Backend is a Python FastAPI application that serves as the automation 
 
 - **🧠 Cognitive Task Interpretation**: Uses Google ADK with Gemini to understand and plan complex automation workflows
 - **💰 Cost-Optimized**: Pre-processing validation and plan caching minimize unnecessary LLM calls
+- **⚡ Local App Launcher**: Direct application launching without LLM calls for simple "open X" requests (< 5s vs 10-30s)
 - **🎯 Multi-App Orchestration**: Seamlessly automates workflows across multiple desktop applications
 - **🔄 Real-Time Streaming**: WebSocket-based status updates for live execution monitoring
 - **🛡️ Robust Error Handling**: Automatic retry logic with exponential backoff and comprehensive error reporting
@@ -23,6 +24,12 @@ AEGIS RPA Backend is a Python FastAPI application that serves as the automation 
 │         FastAPI Backend                     │
 │  ┌──────────────────────────────────────┐  │
 │  │  Pre-Processing & Validation Layer   │  │
+│  └──────────────┬───────────────────────┘  │
+│                 │                           │
+│  ┌──────────────▼───────────────────────┐  │
+│  │     Local App Launcher (Optional)    │  │
+│  │  - Direct app launch via Win key     │  │
+│  │  - Bypasses LLM for simple requests  │  │
 │  └──────────────┬───────────────────────┘  │
 │                 │                           │
 │  ┌──────────────▼───────────────────────┐  │
@@ -202,6 +209,11 @@ aegis-back/
 │   ├── main.py                 # FastAPI application entry point
 │   ├── models.py               # Pydantic data models
 │   ├── preprocessing.py        # Pre-processing validation layer
+│   ├── local_app_launcher.py   # Local app launcher (optimization)
+│   ├── app_name_extractor.py   # App name extraction from NL
+│   ├── app_name_mapper.py      # App name normalization
+│   ├── launch_executor.py      # PyAutoGUI launch automation
+│   ├── launch_verifier.py      # Launch success verification
 │   ├── plan_cache.py           # Execution plan caching
 │   ├── adk_agent.py            # ADK agent manager
 │   ├── rpa_tools.py            # Custom RPA toolbox
@@ -411,6 +423,12 @@ For issues and questions:
 - ✅ JSON logging support for production environments
 
 ### In Progress 🚧
+
+**Local App Launcher (Optimization Feature):**
+- ⏳ Configuration infrastructure setup (Task 1)
+  - Creating config/app_mappings.json with default application mappings
+  - Implementing LauncherConfig dataclass
+  - Adding environment variable support for launcher configuration
 
 **Testing:**
 - ⏳ Unit tests for data models (Task 2.1)

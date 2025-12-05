@@ -1,0 +1,10 @@
+{
+  "chrome": ["chrome", "google chrome", "browser"],
+  "excel": ["excel", "spreadsheet", "ms excel", "microsoft excel"],
+  "word": ["word", "document", "ms word", "microsoft word"],
+  "notepad": ["notepad", "text editor", "note pad"],
+  "calculator": ["calculator", "calc"],
+  "explorer": ["explorer", "file explorer", "files"],
+  "cmd": ["cmd", "command prompt", "terminal"],
+  "powershell": ["powershell", "power shell", "ps"]
+}

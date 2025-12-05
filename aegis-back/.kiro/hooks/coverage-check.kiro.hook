@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Coverage Reporter",
+  "description": "Manual hook to run pytest with coverage report and identify untested code paths",
+  "version": "1",
+  "when": {
+    "type": "manual"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "pytest --cov=src --cov-report=term-missing --cov-report=html",
+    "workingDirectory": "aegis-back"
+  }
+}

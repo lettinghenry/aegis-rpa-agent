@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Flutter Test Runner",
+  "description": "Automatically runs Flutter tests for the corresponding test file when a Dart source file in lib/ is saved",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "lib/**/*.dart"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "flutter test test/unit/{{file_relative_path_from_lib}}_test.dart",
+    "workingDirectory": "aegis-front"
+  }
+}

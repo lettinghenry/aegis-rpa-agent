@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Dart Auto-Format",
+  "description": "Automatically formats Dart files on save to maintain consistent code style",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "lib/**/*.dart",
+      "test/**/*.dart"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "dart format {{file_path}}",
+    "workingDirectory": "aegis-front"
+  }
+}
